@@ -33,7 +33,8 @@ def main():
 		hilo+=1
 		
 	#Regresa un json dummy de relojes desplegados
-	return jsonify({'ok':True, 'description':'Deployed'})
+	#return jsonify({'ok':True, 'description':'Deployed'})
+	return render_template("relojes.html")
 
 #Retorna un json 
 @app.route("/relojes/getTime/<int:idReloj>/")

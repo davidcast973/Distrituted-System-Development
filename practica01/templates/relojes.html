@@ -3,7 +3,12 @@
 <title>Práctica #1</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
+<script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script>
 
+<script src="{{url_for('static', filename='./js/infoHilos.js')}}"></script>
 <head>
 <script>
 function startTime() {
@@ -14,20 +19,20 @@ function startTime() {
   m = checkTime(m);
   s = checkTime(s);
   //reloj1
-  document.getElementById('reloj1').innerHTML =
-  h + ":" + m + ":" + s;
+  /*document.getElementById('reloj1').innerHTML =
+  h + ":" + m + ":" + s;*/
 
   //reloj2
-  document.getElementById('reloj2').innerHTML =
-  h+1 + ":" + m + ":" + s;  
+  /*document.getElementById('reloj2').innerHTML =
+  h+1 + ":" + m + ":" + s;  */
   
   //reloj3
-  document.getElementById('reloj3').innerHTML =
-  h+2 + ":" + m + ":" + s;  
+  /*document.getElementById('reloj3').innerHTML =
+  h+2 + ":" + m + ":" + s;  */
   
   //reloj4
-  document.getElementById('reloj4').innerHTML =
-  h + ":" + m + ":" + s;  
+  /*document.getElementById('reloj4').innerHTML =
+  h + ":" + m + ":" + s;  */
   
   //
   var t = setTimeout(startTime, 500);
