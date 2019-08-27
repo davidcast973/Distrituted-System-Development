@@ -39,7 +39,17 @@ def main():
 @app.route("/relojes/getTime/<int:idReloj>/")
 def getTimeFromClock(idReloj):
 	try:
-		return jsonify({'ok':True, 'description':relojes[idReloj]})
+		return jsonify({
+			'ok':True, 
+			'description':{
+				"id_reloj":idReloj,
+				"tiempo":{
+					'hora': relojes[idReloj].hora,
+					'mins': relojes[idReloj].mins,
+					'segs': relojes[idReloj].segs
+				}
+			}
+		})
 	except Exception as ex:
 		return jsonify({'ok':False, 'description': str(ex)})
 
