@@ -16,11 +16,6 @@ relojes = []
 #Esta ruta predeterminada lo redirije a /relojes
 @app.route("/")
 def goToMain():
-	return flask.redirect("/relojes", code=302)
-
-#Es la ruta principal, la que inicia los relojes
-@app.route("/relojes")
-def main():
 	global hilo
 	for a in range(4):
 		h = Reloj("#"+str(hilo))
@@ -34,6 +29,12 @@ def main():
 		
 	#Regresa un json dummy de relojes desplegados
 	#return jsonify({'ok':True, 'description':'Deployed'})
+	
+	return flask.redirect("/relojes", code=302)
+
+#Es la ruta principal, la que inicia los relojes
+@app.route("/relojes")
+def main():
 	return render_template("relojes.html")
 
 #Retorna un json 
@@ -81,5 +82,5 @@ def cambiaRitmo(idReloj, opcion):
 		response['description'] = str(ex)
 	return jsonify( response )
 if __name__ == "__main__":
-	app.run(port=80, debug=True)
+	app.run(port=80, debug=False)
 
