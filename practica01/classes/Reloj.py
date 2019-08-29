@@ -10,7 +10,7 @@ class Reloj(threading.Thread):
 	hora = -1
 	mins = -1
 	segs = -1
-	ritmo = 2
+	ritmo = 1
 
 	#El constructor de la clase recibe el nombre que tendrá el reloj.
 	def __init__(self,nombre, hora=None, mins=None, segs=None):
