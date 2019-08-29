@@ -66,6 +66,20 @@ def editaReloj(idReloj,hora, mins, segs):
 	except Exception as ex:
 		return jsonify({'ok':False, 'description': str(ex)})
 
+@app.route("/relojes/<int:idReloj>/<opcion>")
+def cambiaRitmo(idReloj, opcion):
+	response = {'ok':False, 'description':""}
+	try:
+		if opcion=="A":
+			relojes[idReloj].ritmo -= 0.1
+		if opcion == "D":
+			relojes[idReloj].ritmo += 1
+		response['ok'] = True
+		response['description'] = "ritmo modificado: "+str(relojes[idReloj].ritmo)+" cambios/seg"
+	except Exception as ex:
+		print("Excepción en cambiaRitmo:", ex)
+		response['description'] = str(ex)
+	return jsonify( response )
 if __name__ == "__main__":
 	app.run(port=80, debug=True)
 
