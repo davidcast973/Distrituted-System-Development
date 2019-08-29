@@ -11,6 +11,7 @@ class Reloj(threading.Thread):
 	mins = -1
 	segs = -1
 	ritmo = 1
+	paused = False
 
 	#El constructor de la clase recibe el nombre que tendrá el reloj.
 	def __init__(self,nombre, hora=None, mins=None, segs=None):
@@ -39,21 +40,27 @@ class Reloj(threading.Thread):
 		No es más que un grupo de while's anidados.
 		"""
 		while True:
-			while self.hora< 24:
+			while self.hora < 23 and not self.paused:
 				self.hora += 1
-				while self.mins< 60:
+				while self.mins < 59 and not self.paused:
 					self.mins+= 1
-					while self.segs< 60:
+					while self.segs < 59 and not self.paused:
 						self.segs+= 1
 						#Se imprime el valor del reloj para verificar su funcionalidad
 						print("reloj:",self.nombre,"->",self)
 						time.sleep(self.ritmo)
-					self.segs= -1
-				self.mins= -1
-			self.hora= -1
+					if not self.paused:
+						self.segs= -1
+				if not self.paused:
+					self.mins= -1
+			if not self.paused:
+				self.hora= -1
 		
 	def cambiaRitmo(self, nuevoRitmo):
 		self.ritmo=nuevoRitmo
+	
+	def pausa(self):
+		self.paused=True
 
 	#Se sobreescribe su método __repr__
 	def __repr__(self):

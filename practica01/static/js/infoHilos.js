@@ -1,9 +1,10 @@
-var a = "";
-var b = "";
-var c = "";
-var d = "";
+
 
 $(function(){
+    var a = "";
+    var b = "";
+    var c = "";
+    var d = "";
     
     a = setInterval(function(){
         $.ajax({
@@ -18,6 +19,15 @@ $(function(){
             
             var horaFormat = "";
             var horaR1 = data.description.tiempo;
+            if( horaR1.hora < 10){
+                horaR1.hora = "0"+horaR1.hora;
+            }
+            if( horaR1.mins < 10){
+                horaR1.mins = "0"+horaR1.mins;
+            }
+            if( horaR1.segs < 10){
+                horaR1.segs = "0"+horaR1.segs;
+            }
             horaFormat = horaR1.hora+":"+horaR1.mins+":"+horaR1.segs;
             document.getElementById('reloj1').innerHTML = horaFormat;
 
@@ -40,6 +50,17 @@ $(function(){
             
             var horaFormat = "";
             var horaR2 = data.description.tiempo;
+
+            if( horaR2.hora < 10){
+                horaR2.hora = "0"+horaR2.hora;
+            }
+            if( horaR2.mins < 10){
+                horaR2.mins = "0"+horaR2.mins;
+            }
+            if( horaR2.segs < 10){
+                horaR2.segs = "0"+horaR2.segs;
+            }
+
             horaFormat = horaR2.hora+":"+horaR2.mins+":"+horaR2.segs;
             document.getElementById('reloj2').innerHTML = horaFormat;
 
@@ -62,6 +83,10 @@ $(function(){
             
             var horaFormat = "";
             var horaR3 = data.description.tiempo;
+
+            horaR3.hora = horaR3.hora < 10 ? "0"+horaR3.hora : horaR3.hora;
+            horaR3.mins = horaR3.mins < 10 ? "0"+horaR3.mins : horaR3.mins;
+            horaR3.segs = horaR3.segs < 10 ? "0"+horaR3.segs : horaR3.segs;
             horaFormat = horaR3.hora+":"+horaR3.mins+":"+horaR3.segs;
             document.getElementById('reloj3').innerHTML = horaFormat;
 
@@ -84,6 +109,9 @@ $(function(){
             
             var horaFormat = "";
             var horaR4 = data.description.tiempo;
+            horaR4.hora = horaR4.hora < 10 ? "0"+horaR4.hora : horaR4.hora;
+            horaR4.mins = horaR4.mins < 10 ? "0"+horaR4.mins : horaR4.mins;
+            horaR4.segs = horaR4.segs < 10 ? "0"+horaR4.segs : horaR4.segs;
             horaFormat = horaR4.hora+":"+horaR4.mins+":"+horaR4.segs;
             document.getElementById('reloj4').innerHTML = horaFormat;
 
@@ -98,6 +126,9 @@ $(function(){
     $("#edit1").click(function(){
         clearInterval(a);
         swal({
+            text: 'Se supone que interrumpió a',
+          });
+        swal({
             text: 'Dame la nueva hora en formato HH:MM:SS',
             content: "input",
             button: {
@@ -110,7 +141,7 @@ $(function(){
             tiempo=name.split(":");
             $.ajax({
                 type: "GET",
-                url: `/relojes/edit/${0}/${tiempo[0]}/${tiempo[1]}/${tiempo[2]}`,
+                url: `/relojes/edit/${0}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })
@@ -128,6 +159,15 @@ $(function(){
                         
                         var horaFormat = "";
                         var horaR1 = data.description.tiempo;
+                        if( horaR1.hora < 10){
+                            horaR1.hora = "0"+horaR1.hora;
+                        }
+                        if( horaR1.mins < 10){
+                            horaR1.mins = "0"+horaR1.mins;
+                        }
+                        if( horaR1.segs < 10){
+                            horaR1.segs = "0"+horaR1.segs;
+                        }
                         horaFormat = horaR1.hora+":"+horaR1.mins+":"+horaR1.segs;
                         document.getElementById('reloj1').innerHTML = horaFormat;
             
@@ -159,7 +199,7 @@ $(function(){
             tiempo=name.split(":");
             $.ajax({
                 type: "GET",
-                url: `/relojes/edit/${1}/${tiempo[0]}/${tiempo[1]}/${tiempo[2]}`,
+                url: `/relojes/edit/${1}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })
@@ -209,7 +249,7 @@ $(function(){
             tiempo=name.split(":");
             $.ajax({
                 type: "GET",
-                url: `/relojes/edit/${2}/${tiempo[0]}/${tiempo[1]}/${tiempo[2]}`,
+                url: `/relojes/edit/${2}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })
@@ -226,8 +266,11 @@ $(function(){
                         //console.log(data);
                         
                         var horaFormat = "";
-                        var horaR1 = data.description.tiempo;
-                        horaFormat = horaR1.hora+":"+horaR1.mins+":"+horaR1.segs;
+                        var horaR3 = data.description.tiempo;
+                        horaR3.hora = horaR3.hora < 10 ? "0"+horaR3.hora : horaR3.hora;
+                        horaR3.mins = horaR3.mins < 10 ? "0"+horaR3.mins : horaR3.mins;
+                        horaR3.segs = horaR3.segs < 10 ? "0"+horaR3.segs : horaR3.segs;
+                        horaFormat = horaR3.hora+":"+horaR3.mins+":"+horaR3.segs;
                         document.getElementById('reloj3').innerHTML = horaFormat;
             
                     })
@@ -258,7 +301,7 @@ $(function(){
             tiempo=name.split(":");
             $.ajax({
                 type: "GET",
-                url: `/relojes/edit/${3}/${tiempo[0]}/${tiempo[1]}/${tiempo[2]}`,
+                url: `/relojes/edit/${3}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })
@@ -275,8 +318,11 @@ $(function(){
                         //console.log(data);
                         
                         var horaFormat = "";
-                        var horaR1 = data.description.tiempo;
-                        horaFormat = horaR1.hora+":"+horaR1.mins+":"+horaR1.segs;
+                        var horaR4 = data.description.tiempo;
+                        horaR4.hora = horaR4.hora < 10 ? "0"+horaR4.hora : horaR4.hora;
+                        horaR4.mins = horaR4.mins < 10 ? "0"+horaR4.mins : horaR4.mins;
+                        horaR4.segs = horaR4.segs < 10 ? "0"+horaR4.segs : horaR4.segs;
+                        horaFormat = horaR4.hora+":"+horaR4.mins+":"+horaR4.segs;
                         document.getElementById('reloj4').innerHTML = horaFormat;
             
                     })
