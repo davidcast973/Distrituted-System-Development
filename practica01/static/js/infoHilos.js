@@ -350,3 +350,106 @@ $(function(){
     })*/
 
 });
+
+/////////////////////
+function add1(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("ACELERA");
+      console.log(this.responseText);
+    }
+  };
+  xhttp.open("GET", "/relojes/0/A", true);
+  xhttp.send();
+}
+
+function sub1(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("DESACELERA");
+      console.log(this.responseText);
+    }
+  };
+  xhttp.open("GET", "/relojes/0/D", true);
+  xhttp.send();
+}
+
+////////////////////
+
+function add2(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("ACELERA");
+      console.log(this.responseText);
+    }
+  };
+  xhttp.open("GET", "/relojes/1/A", true);
+  xhttp.send();
+}
+
+function sub2(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("DESACELERA");
+      console.log(this.responseText);
+    }
+  };
+  xhttp.open("GET", "/relojes/1/D", true);
+  xhttp.send();
+}
+
+////////////////
+
+function add3(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("ACELERA");
+      console.log(this.responseText);
+    }
+  };
+  xhttp.open("GET", "/relojes/2/A", true);
+  xhttp.send();
+}
+
+function sub3(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("DESACELERA");
+      console.log(this.responseText);
+    }
+  };
+  xhttp.open("GET", "/relojes/2/D", true);
+  xhttp.send();
+}
+////////////////////
+
+function add4(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("ACELERA");
+      console.log(this.responseText);
+    }
+  };
+  xhttp.open("GET", "/relojes/3/A", true);
+  xhttp.send();
+}
+
+function sub4(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log("DESACELERA");
+      console.log(this.responseText);
+    }
+  };
+  xhttp.open("GET", "/relojes/3/D", true);
+  xhttp.send();
+}
+

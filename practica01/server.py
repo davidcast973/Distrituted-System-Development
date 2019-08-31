@@ -61,7 +61,7 @@ def editaReloj(idReloj,hora, mins):#, segs):
 	try:
 		relojes[idReloj].hora = hora
 		relojes[idReloj].mins = mins
-		#relojes[idReloj].segs = segs
+		relojes[idReloj].segs = segs
 		#Regresa el json de edición correcta
 		return jsonify({'ok':True, 'description':str(relojes[idReloj]) } )
 	except Exception as ex:
@@ -80,7 +80,8 @@ def cambiaRitmo(idReloj, opcion):
 	response = {'ok':False, 'description':""}
 	try:
 		if opcion=="A":
-			relojes[idReloj].ritmo -= 0.1
+		    if(relojes[idReloj].ritmo > 0.1):#es un tope... al llegar a 0 fallaba
+    			relojes[idReloj].ritmo -= 0.1
 		if opcion == "D":
 			relojes[idReloj].ritmo += 1
 		response['ok'] = True
