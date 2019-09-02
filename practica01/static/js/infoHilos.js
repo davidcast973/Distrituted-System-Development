@@ -14,7 +14,7 @@ $(function(){
             contentType:'application/json;charset=UTF-8',    
         })
         .done(function(data) {
-            console.log( "exito R1" );
+            //console.log( "exito R1" );
             //console.log(data);
             
             var horaFormat = "";
@@ -36,7 +36,7 @@ $(function(){
         console.log( "error" );
         console.log(data);
         });
-    }, 100);
+    }, 200);
     b = setInterval(function(){
         $.ajax({
             type: "GET",
@@ -45,7 +45,7 @@ $(function(){
             contentType:'application/json;charset=UTF-8',    
         })
         .done(function(data) {
-            console.log( "exito R2" );
+            //console.log( "exito R2" );
             //console.log(data);
             
             var horaFormat = "";
@@ -69,7 +69,7 @@ $(function(){
         console.log( "error" );
         console.log(data);
         });
-    }, 100);
+    }, 200);
     c = setInterval(function(){
         $.ajax({
             type: "GET",
@@ -78,7 +78,7 @@ $(function(){
             contentType:'application/json;charset=UTF-8',    
         })
         .done(function(data) {
-            console.log( "exito R3" );
+            //console.log( "exito R3" );
             //console.log(data);
             
             var horaFormat = "";
@@ -95,7 +95,7 @@ $(function(){
         console.log( "error" );
         console.log(data);
         });
-    }, 100);
+    }, 200);
     d = setInterval(function(){
         $.ajax({
             type: "GET",
@@ -104,7 +104,7 @@ $(function(){
             contentType:'application/json;charset=UTF-8',    
         })
         .done(function(data) {
-            console.log( "exito R4" );
+            //console.log( "exito R4" );
             //console.log(data);
             
             var horaFormat = "";
@@ -120,14 +120,19 @@ $(function(){
         console.log( "error" );
         console.log(data);
         });
-    }, 100);
+    }, 200);
 
 
     $("#edit1").click(function(){
         clearInterval(a);
-        swal({
-            text: 'Se supone que interrumpió a',
-          });
+
+        $.ajax({
+            type: "GET",
+            url: `/relojes/pausa/${0}/pausa`,
+            //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+            contentType:'application/json;charset=UTF-8',    
+        });
+        
         swal({
             text: 'Dame la nueva hora en formato HH:MM:SS',
             content: "input",
@@ -141,11 +146,19 @@ $(function(){
             tiempo=name.split(":");
             $.ajax({
                 type: "GET",
+                async: false,
                 url: `/relojes/edit/${0}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })
             .done(function(data) {
+                $.ajax({
+                  type: "GET",
+                  async: false,
+                  url: `/relojes/pausa/${0}/retoma`,
+                  //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+                  contentType:'application/json;charset=UTF-8',    
+              });
                 a = setInterval(function(){
                     $.ajax({
                         type: "GET",
@@ -154,7 +167,7 @@ $(function(){
                         contentType:'application/json;charset=UTF-8',    
                     })
                     .done(function(data) {
-                        console.log( "exito R1" );
+                        //console.log( "exito R1" );
                         //console.log(data);
                         
                         var horaFormat = "";
@@ -176,7 +189,7 @@ $(function(){
                     console.log( "error" );
                     console.log(data);
                     });
-                }, 1000);
+                }, 200);
             })
             .fail(function(data) {
             console.log( "error" );
@@ -186,6 +199,12 @@ $(function(){
     });
     $("#edit2").click(function(){
         clearInterval(b);
+        $.ajax({
+            type: "GET",
+            url: `/relojes/pausa/${1}/pausa`,
+            //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+            contentType:'application/json;charset=UTF-8',    
+        });
         swal({
             text: 'Dame la nueva hora en formato HH:MM:SS',
             content: "input",
@@ -199,11 +218,19 @@ $(function(){
             tiempo=name.split(":");
             $.ajax({
                 type: "GET",
+                async: false,
                 url: `/relojes/edit/${1}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })
             .done(function(data) {
+              $.ajax({
+                  type: "GET",
+                  async: false,
+                  url: `/relojes/pausa/${1}/retoma`,
+                  //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+                  contentType:'application/json;charset=UTF-8',    
+              });
                 a = setInterval(function(){
                     $.ajax({
                         type: "GET",
@@ -212,7 +239,7 @@ $(function(){
                         contentType:'application/json;charset=UTF-8',    
                     })
                     .done(function(data) {
-                        console.log( "exito R2" );
+                        //console.log( "exito R2" );
                         //console.log(data);
                         
                         var horaFormat = "";
@@ -225,7 +252,7 @@ $(function(){
                     console.log( "error" );
                     console.log(data);
                     });
-                }, 1000);
+                }, 200);
             })
             .fail(function(data) {
             console.log( "error" );
@@ -236,6 +263,12 @@ $(function(){
 
     $("#edit3").click(function(){
         clearInterval(c);
+        $.ajax({
+            type: "GET",
+            url: `/relojes/pausa/${1}/pausa`,
+            //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+            contentType:'application/json;charset=UTF-8',    
+        });
         swal({
             text: 'Dame la nueva hora en formato HH:MM:SS',
             content: "input",
@@ -249,11 +282,19 @@ $(function(){
             tiempo=name.split(":");
             $.ajax({
                 type: "GET",
+                async: false,
                 url: `/relojes/edit/${2}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })
             .done(function(data) {
+              $.ajax({
+                  type: "GET",
+                  async: false,
+                  url: `/relojes/pausa/${2}/retoma`,
+                  //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+                  contentType:'application/json;charset=UTF-8',    
+              });
                 c = setInterval(function(){
                     $.ajax({
                         type: "GET",
@@ -262,7 +303,7 @@ $(function(){
                         contentType:'application/json;charset=UTF-8',    
                     })
                     .done(function(data) {
-                        console.log( "exito R3" );
+                        //console.log( "exito R3" );
                         //console.log(data);
                         
                         var horaFormat = "";
@@ -278,7 +319,7 @@ $(function(){
                     console.log( "error" );
                     console.log(data);
                     });
-                }, 1000);
+                }, 200);
             })
             .fail(function(data) {
             console.log( "error" );
@@ -288,6 +329,12 @@ $(function(){
     });
     $("#edit4").click(function(){
         clearInterval(d);
+        $.ajax({
+            type: "GET",
+            url: `/relojes/pausa/${1}/pausa`,
+            //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+            contentType:'application/json;charset=UTF-8',    
+        });
         swal({
             text: 'Dame la nueva hora en formato HH:MM:SS',
             content: "input",
@@ -301,11 +348,19 @@ $(function(){
             tiempo=name.split(":");
             $.ajax({
                 type: "GET",
+                async: false,
                 url: `/relojes/edit/${3}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })
             .done(function(data) {
+              $.ajax({
+                  type: "GET",
+                  async: false,
+                  url: `/relojes/pausa/${3}/retoma`,
+                  //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+                  contentType:'application/json;charset=UTF-8',    
+              });
                 d = setInterval(function(){
                     $.ajax({
                         type: "GET",
@@ -314,7 +369,7 @@ $(function(){
                         contentType:'application/json;charset=UTF-8',    
                     })
                     .done(function(data) {
-                        console.log( "exito R4" );
+                        //console.log( "exito R4" );
                         //console.log(data);
                         
                         var horaFormat = "";
@@ -330,13 +385,23 @@ $(function(){
                     console.log( "error" );
                     console.log(data);
                     });
-                }, 1000);
+                }, 200);
             })
             .fail(function(data) {
             console.log( "error" );
             console.log(data);
             });
           })
+    });
+
+    $("#add3").click(function(){
+      $.ajax({
+          type: "GET",
+          url: '/relojes/2/A',
+          //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+          contentType:'application/json;charset=UTF-8',    
+      });
+      console.log("Se acelerará");
     });
 
     /*b = setInterval(function(){
@@ -350,6 +415,8 @@ $(function(){
     })*/
 
 });
+
+
 
 /////////////////////
 function add1(){
@@ -404,7 +471,7 @@ function sub2(){
 
 ////////////////
 
-function add3(){
+/*function add3(){
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
@@ -414,7 +481,7 @@ function add3(){
   };
   xhttp.open("GET", "/relojes/2/A", true);
   xhttp.send();
-}
+}*/
 
 function sub3(){
   var xhttp = new XMLHttpRequest();

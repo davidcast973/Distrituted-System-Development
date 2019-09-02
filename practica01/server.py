@@ -59,17 +59,16 @@ def getTimeFromClock(idReloj):
 @app.route("/relojes/edit/<int:idReloj>/<int:hora>/<int:mins>", methods=['GET', 'POST'])
 def editaReloj(idReloj,hora, mins):#, segs):
 	try:
-		relojes[idReloj].hora = hora
-		relojes[idReloj].mins = mins
-		relojes[idReloj].segs = segs
+		relojes[idReloj].hora = hora 
+		relojes[idReloj].mins = mins 
 		#Regresa el json de edición correcta
-		return jsonify({'ok':True, 'description':str(relojes[idReloj]) } )
+		return jsonify({'ok':True, 'description': {'reloj_afectado':idReloj, 'nuevo_valor':str(relojes[idReloj])} } )
 	except Exception as ex:
 		return jsonify({'ok':False, 'description': str(ex)})
 
-@app.route("/relojes/pausa/<int:idReloj>")
-def pausaReloj(idReloj):
-	if relojes[idReloj].paused == False:
+@app.route("/relojes/pausa/<int:idReloj>/<opcion>")
+def pausaReloj(idReloj, opcion):
+	if opcion == "pausa":
 		relojes[idReloj].paused = True
 	else:
 		relojes[idReloj].paused = False
