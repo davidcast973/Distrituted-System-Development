@@ -89,6 +89,21 @@ def cambiaRitmo(idReloj, opcion):
 		response['description'] = str(ex)
 	return jsonify( response )
 
+#Esta ruta/función, será el detonador que actualizará a los demás servidores
+@app.route("/relojes/sendUpdate")
+def sendUpdateTo(idReloj, opcion):
+
+	response = {'ok':False, 'description':""}
+
+	#Petición para actualizar principal
+	#Petición para actualizar secundario 1
+	#Petición para actualizar secundario 2
+
+	#Formatear la respuesta con la info de exito o fracaso de update en 
+	#cada servidor
+
+	return jsonify( response )
+
 
 if __name__ == "__main__":
 	app.run(port=80, debug=True)

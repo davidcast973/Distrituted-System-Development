@@ -67,6 +67,8 @@ def getTimeFromClock(idReloj):
 if __name__ == "__main__":
 	global hilo
 	app.run(port=80, debug=True)
+    #Pide la hora al servidor maestro
+    #Instancia el reloj de este servidor con la del maestro
     h = Reloj("#"+str(hilo))
 	relojes.append(h)
 	relojes[0].start()
