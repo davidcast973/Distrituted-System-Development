@@ -13,32 +13,28 @@ app = Flask(__name__)
 hilo = 1
 relojes = []
 
-# Reloj maestro crea su propio Hilo
-
-
 #Esta ruta predeterminada lo redirije a /relojes
 @app.route("/")
 def goToMain():
 	global hilo
-	for a in range(4):
-		h = Reloj("#"+str(hilo))
-		###Pensé que esto funcionaría :
-		###h = threading.Thread(target=createHilos, name="Hilo "+str(hilo), args=("#"+str(hilo),) )
-		### :(
-		relojes.append(h)
-		relojes[a].start()
-		print("Inició hilo:",hilo)
-		hilo+=1
-		
+	h = Reloj("#"+str(hilo))
+	###Pensé que esto funcionaría :
+	###h = threading.Thread(target=createHilos, name="Hilo "+str(hilo), args=("#"+str(hilo),) )
+	### :(
+	relojes.append(h)
+	relojes[0].start()
+	print("Inició hilo:",hilo)
+	hilo+=1
+	
 	#Regresa un json dummy de relojes desplegados
 	#return jsonify({'ok':True, 'description':'Deployed'})
 	
-	return flask.redirect("/relojes", code=302)
+	return flask.redirect("/reloj_maestro", code=302)
 
 #Es la ruta principal, la que inicia los relojes
-@app.route("/relojes")
+@app.route("/reloj_maestro")
 def main():
-	return render_template("relojes.html")
+	return render_template("reloj.html")
 
 #Retorna un json 
 @app.route("/relojes/getTime/<int:idReloj>/")
@@ -82,8 +78,8 @@ def cambiaRitmo(idReloj, opcion):
 	response = {'ok':False, 'description':""}
 	try:
 		if opcion=="A":
-		    if(relojes[idReloj].ritmo > 0.1):#es un tope... al llegar a 0 fallaba
-    			relojes[idReloj].ritmo -= 0.1
+			if(relojes[idReloj].ritmo > 0.1):#es un tope... al llegar a 0 fallaba
+				relojes[idReloj].ritmo -= 0.2
 		if opcion == "D":
 			relojes[idReloj].ritmo += 1
 		response['ok'] = True
@@ -92,6 +88,8 @@ def cambiaRitmo(idReloj, opcion):
 		print("Excepción en cambiaRitmo:", ex)
 		response['description'] = str(ex)
 	return jsonify( response )
+
+
 if __name__ == "__main__":
 	app.run(port=80, debug=True)
 
