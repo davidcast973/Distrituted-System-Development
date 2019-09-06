@@ -109,7 +109,7 @@ def sendUpdateTo():
 	
 	try:
 		#Petición para actualizar secundario 2
-		srv_sec_2 = requests.post("http://localhost:110/relojes/refresh_hour")
+		srv_sec_2 = requests.post("http://localhost:120/relojes/refresh_hour")
 		salida = json.loads(srv_sec_2.text)
 		actualizados['secundario_02'] = {'updated':salida['ok']}
 	except Exception as ex:

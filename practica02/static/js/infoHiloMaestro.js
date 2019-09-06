@@ -119,12 +119,22 @@ $(function(){
             //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
             contentType:'application/json;charset=UTF-8',    
         }).done(function(data){
-            console.log("Actualización terminada...");
-            console.log(data);
-            swal("Listo!", "Todo se actualizó...", "success");
-            setTimeout(function () {
-                location.reload();
-            }, 2000);
+            if(data.ok == true){
+                console.log("Actualización terminada...");
+                console.log(data);
+                swal("Listo!", "Todo se actualizó...", "success");
+                setTimeout(function () {
+                    location.reload();
+                }, 2000);
+            }else{
+                console.log("ERROR");
+                console.log(data);
+                console.log("------");
+                swal("Oh!", "Ha ocurrido un error...", "error");
+                /*setTimeout(function () {
+                    location.reload();
+                }, 2000);*/
+            }
         });
     });
 });
