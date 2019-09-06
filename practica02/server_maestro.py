@@ -15,6 +15,7 @@ app = Flask(__name__)
 
 hilo = 1
 relojes = []
+resultados = [None]*3
 
 #Esta ruta predeterminada lo redirije a /relojes
 @app.route("/")
@@ -84,6 +85,14 @@ def cambiaRitmo(idReloj, opcion):
 		response['description'] = str(ex)
 	return jsonify( response )
 
+def actualiza_secundarios(url, index):
+	try:
+		srv_sec_1 = requests.post(url)
+		salida = json.loads(srv_sec_1.text)
+		resultados[index]={'updated':salida['ok']}
+	except Exception as ex:
+		resultados[index] = {'updated':False, 'error':str(ex) }
+
 #Esta ruta/función, será el detonador que actualizará a los demás servidores
 @app.route("/relojes/sendUpdate", methods=['POST'])
 def sendUpdateTo():
@@ -99,21 +108,17 @@ def sendUpdateTo():
 	except Exception as ex:
 		actualizados['principal'] = {'updated':False, 'error':str(ex) }
 	
-	try:
-		#Petición para actualizar secundario 1
-		srv_sec_1 = requests.post("http://localhost:100/relojes/refresh_hour")
-		salida = json.loads(srv_sec_1.text)
-		actualizados['secundario_01'] = {'updated':salida['ok'] }
-	except Exception as ex:
-		actualizados['secundario_01'] = {'updated':False, 'error':str(ex) }
-	
-	try:
-		#Petición para actualizar secundario 2
-		srv_sec_2 = requests.post("http://localhost:120/relojes/refresh_hour")
-		salida = json.loads(srv_sec_2.text)
-		actualizados['secundario_02'] = {'updated':salida['ok']}
-	except Exception as ex:
-		actualizados['secundario_02'] = {'updated':False, 'error':str(ex)}
+	#Actualizamos los secundarios con hilos. Ya que el principal es el bueno
+	hilo = threading.Thread(target=actualiza_secundarios, name="Sec1", args=("http://localhost:100/relojes/refresh_hour", 0))
+	hilo.start()
+	hilo2 = threading.Thread(target=actualiza_secundarios, name="Sec1", args=("http://localhost:120/relojes/refresh_hour", 1))
+	hilo2.start()
+	#Matamos los hilos creados.
+	hilo.join()
+	hilo2.join()
+	#Formulamos respuesta de servicio
+	actualizados['secundario_01'] = resultados[0]
+	actualizados['secundario_02'] = resultados[1]
 
 	response['ok'] = actualizados['principal']['updated'] and \
 						actualizados['secundario_01']['updated'] and \
@@ -121,6 +126,7 @@ def sendUpdateTo():
 	#Formatear la respuesta con la info de exito o fracaso de update en 
 	#cada servidor
 	end = datetime.datetime.now()
+
 	response['description'] = actualizados
 	response['timing'] = str(end - now)
 	return jsonify( response )
