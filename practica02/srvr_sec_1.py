@@ -4,6 +4,9 @@ from flask_cors import CORS, cross_origin
 import flask
 import threading
 import time
+import datetime
+import json
+import requests
 
 #Includes de práctica:
 from classes.Reloj import Reloj
@@ -32,18 +35,30 @@ def cambiaRitmo(idReloj, opcion):
 #Esta ruta predeterminada muestra la hora de este servidor
 @app.route("/")
 def goToMain():
-	return render_template("reloj.html")
+	return render_template("reloj_srvr_secundario_1.html")
 
 #Es la ruta principal, la que inicia los relojes
-@app.route("/refresh_hour/<from>")
+@app.route("/relojes/refresh_hour", methods=['POST'])
 def getHourFromMaster():
-    response = {'ok':False, 'description':""}
-    #Solicitará la hora al maestro
-    #Solicitará ritmo de reloj al maestro
-	
-    #Regresa el json de que se ha actualizado el reloj
-    return jsonify( response )
+	#Solicitará la hora al principal
+	#Solicitará ritmo de reloj al principal
+	r = requests.get("http://localhost:90/relojes/getTime/0/")
+	salida = json.loads(r.text)
+	horaSrvrPrincipal = salida['description']['tiempo']
+	if r.status_code == 200 and salida['ok'] == True:
+		now = datetime.datetime.now()
+		principal = datetime.datetime( now.year, now.month, now.day, (horaSrvrPrincipal['hora']), (horaSrvrPrincipal['mins']), (horaSrvrPrincipal['segs']) )
+		#Le suma 1 hora
+		hora_modif_mins= principal + datetime.timedelta( hours = 1)
+		relojes[0].hora = hora_modif_mins.hour
+		relojes[0].mins = hora_modif_mins.minute
+		relojes[0].segs = hora_modif_mins.second
+		relojes[0].ritmo = salida['description']['velocidad_segundero']
+		relojes[0].paused = salida['description']['pausado']
 
+	#Regresa el json de que se ha actualizado el reloj
+	return flask.redirect("/relojes/getTime/0/")
+    
 #Retorna un json 
 @app.route("/relojes/getTime/<int:idReloj>/")
 def getTimeFromClock(idReloj):
@@ -56,7 +71,9 @@ def getTimeFromClock(idReloj):
 					'hora': relojes[idReloj].hora,
 					'mins': relojes[idReloj].mins,
 					'segs': relojes[idReloj].segs
-				}
+				},
+				"velocidad_segundero" : relojes[idReloj].ritmo,
+				"pausado" : relojes[idReloj].paused
 			}
 		})
 	except Exception as ex:
@@ -65,9 +82,23 @@ def getTimeFromClock(idReloj):
 
 
 if __name__ == "__main__":
-	global hilo
-	app.run(port=80, debug=True)
-    h = Reloj("#"+str(hilo))
-	relojes.append(h)
-	relojes[0].start()
-	print("Inició hilo:",hilo)
+	#Solicitará la hora al principal
+	#Solicitará ritmo de reloj al principal
+	r = requests.get("http://localhost:90/relojes/getTime/0/")
+	salida = json.loads(r.text)
+	horaSrvrPrincipal = salida['description']['tiempo']
+	if r.status_code == 200 and salida['ok'] == True:
+		now = datetime.datetime.now()
+		principal = datetime.datetime( now.year, now.month, now.day, (horaSrvrPrincipal['hora']), (horaSrvrPrincipal['mins']), (horaSrvrPrincipal['segs']) )
+		#Le suma 1 hora
+		hora_modif_mins= principal + datetime.timedelta( hours = 1)
+		h = Reloj("Secundario_01 #"+str(hilo), 
+			hora = hora_modif_mins.hour, 
+			mins = hora_modif_mins.minute,
+			segs = hora_modif_mins.second
+		)
+		relojes.append(h)
+		relojes[0].start()
+		print("Inició hilo:",hilo)
+
+	app.run(port=100, debug=True)

@@ -6,6 +6,7 @@ import datetime
 #Reloj extiende (hereda de la clase threading.Thread)
 class Reloj(threading.Thread):
 	#Se crean los atributos de la clase
+	printable = False
 	nombre = ""
 	hora = -1
 	mins = -1
@@ -19,9 +20,9 @@ class Reloj(threading.Thread):
 		#Se asigna el nombre al hilo
 		self.nombre= nombre
 		if(hora!=None and mins!=None and segs!=None):
-			self.hora=hora
-			self.mins=mins
-			self.segs=segs
+			self.hora=hora - 1
+			self.mins=mins - 1
+			self.segs=segs - 1
 		else:
 			if(self.nombre=="#1"):
 				t = datetime.datetime.now()
@@ -47,7 +48,8 @@ class Reloj(threading.Thread):
 					while self.segs < 59 and not self.paused:
 						self.segs+= 1
 						#Se imprime el valor del reloj para verificar su funcionalidad
-						print("reloj:",self.nombre,"->",self)
+						if self.printable:
+							print("reloj:",self.nombre,"->",self)
 						time.sleep(self.ritmo)
 					if not self.paused:
 						self.segs= -1

@@ -4,6 +4,8 @@ from flask_cors import CORS, cross_origin
 import flask
 import threading
 import time
+import requests
+import json
 
 #Includes de práctica:
 from classes.Reloj import Reloj
@@ -32,17 +34,27 @@ def cambiaRitmo(idReloj, opcion):
 #Esta ruta predeterminada muestra la hora de este servidor
 @app.route("/")
 def goToMain():
-	return render_template("reloj.html")
+	#return render_template("reloj.html")
+	return render_template("reloj_srvr_principal.html")
 
 #Es la ruta principal, la que inicia los relojes
-@app.route("/refresh_hour")
+@app.route("/relojes/refresh_hour", methods=['POST'])
 def getHourFromMaster():
-    response = {'ok':False, 'description':""}
-    #Solicitará la hora al maestro
-    #Solicitará ritmo de reloj al maestro
+	r = requests.get("http://localhost:80/relojes/getTime/0/")
+	salida = json.loads(r.text)
+	horaSrvMaster = salida['description']['tiempo']
+	if r.status_code == 200 and salida['ok'] == True:
+		relojes[0].hora = horaSrvMaster['hora']
+		relojes[0].mins = horaSrvMaster['mins']
+		relojes[0].segs = horaSrvMaster['segs']
+		relojes[0].ritmo = salida['description']['velocidad_segundero']
+		relojes[0].paused = salida['description']['pausado']
+
+	#Solicitará la hora al maestro
+	#Solicitará ritmo de reloj al maestro
 	
-    #Regresa el json de que se ha actualizado el reloj
-    return jsonify( response )
+	#Regresa el json de que se ha actualizado el reloj
+	return flask.redirect("/relojes/getTime/0/")
 
 #Retorna un json 
 @app.route("/relojes/getTime/<int:idReloj>/")
@@ -56,7 +68,9 @@ def getTimeFromClock(idReloj):
 					'hora': relojes[idReloj].hora,
 					'mins': relojes[idReloj].mins,
 					'segs': relojes[idReloj].segs
-				}
+				},
+				"velocidad_segundero" : relojes[idReloj].ritmo,
+				"pausado" : relojes[idReloj].paused
 			}
 		})
 	except Exception as ex:
@@ -65,11 +79,20 @@ def getTimeFromClock(idReloj):
 
 
 if __name__ == "__main__":
-	global hilo
-	app.run(port=80, debug=True)
-    #Pide la hora al servidor maestro
-    #Instancia el reloj de este servidor con la del maestro
-    h = Reloj("#"+str(hilo))
-	relojes.append(h)
-	relojes[0].start()
-	print("Inició hilo:",hilo)
+		#Pide la hora al servidor maestro
+	#Instancia el reloj de este servidor con la del maestro
+	r = requests.get("http://localhost:80/relojes/getTime/0/")
+	salida = json.loads(r.text)
+	relojes=[]
+	if r.status_code == 200 and salida['ok'] == True:
+		horaSrvMaster = salida['description']['tiempo']
+		h = Reloj("Principal #"+str(hilo), 
+			hora=horaSrvMaster['hora'], 
+			mins=horaSrvMaster['mins'],
+			segs=horaSrvMaster['segs']
+		)
+		relojes.append(h)
+		relojes[0].start()
+		print("Inició hilo:",hilo)
+	app.run(port=90, debug=True)
+	

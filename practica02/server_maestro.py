@@ -4,6 +4,9 @@ from flask_cors import CORS, cross_origin
 import flask
 import threading
 import time
+import requests
+import json
+import datetime
 
 #Includes de práctica:
 from classes.Reloj import Reloj
@@ -16,16 +19,6 @@ relojes = []
 #Esta ruta predeterminada lo redirije a /relojes
 @app.route("/")
 def goToMain():
-	global hilo
-	h = Reloj("#"+str(hilo))
-	###Pensé que esto funcionaría :
-	###h = threading.Thread(target=createHilos, name="Hilo "+str(hilo), args=("#"+str(hilo),) )
-	### :(
-	relojes.append(h)
-	relojes[0].start()
-	print("Inició hilo:",hilo)
-	hilo+=1
-	
 	#Regresa un json dummy de relojes desplegados
 	#return jsonify({'ok':True, 'description':'Deployed'})
 	
@@ -34,7 +27,7 @@ def goToMain():
 #Es la ruta principal, la que inicia los relojes
 @app.route("/reloj_maestro")
 def main():
-	return render_template("reloj.html")
+	return render_template("reloj_maestro.html")
 
 #Retorna un json 
 @app.route("/relojes/getTime/<int:idReloj>/")
@@ -48,14 +41,16 @@ def getTimeFromClock(idReloj):
 					'hora': relojes[idReloj].hora,
 					'mins': relojes[idReloj].mins,
 					'segs': relojes[idReloj].segs
-				}
+				},
+				"velocidad_segundero" : relojes[idReloj].ritmo,
+				"pausado" : relojes[idReloj].paused
 			}
 		})
 	except Exception as ex:
 		return jsonify({'ok':False, 'description': str(ex)})
 
 #Esta ruta/función será la que edite los relojes
-@app.route("/relojes/edit/<int:idReloj>/<int:hora>/<int:mins>", methods=['GET', 'POST'])
+@app.route("/relojes/edit/<int:idReloj>/<int:hora>/<int:mins>", methods=['POST'])
 def editaReloj(idReloj,hora, mins):#, segs):
 	try:
 		relojes[idReloj].hora = hora 
@@ -90,21 +85,57 @@ def cambiaRitmo(idReloj, opcion):
 	return jsonify( response )
 
 #Esta ruta/función, será el detonador que actualizará a los demás servidores
-@app.route("/relojes/sendUpdate")
-def sendUpdateTo(idReloj, opcion):
+@app.route("/relojes/sendUpdate", methods=['POST'])
+def sendUpdateTo():
 
 	response = {'ok':False, 'description':""}
+	actualizados = {}
+	now = datetime.datetime.now()
+	try:
+		#Petición para actualizar principal
+		principal = requests.post("http://localhost:90/relojes/refresh_hour")
+		salida = json.loads(principal.text)
+		actualizados['principal'] = {'updated':salida['ok'] }
+	except Exception as ex:
+		actualizados['principal'] = {'updated':False, 'error':str(ex) }
+	
+	try:
+		#Petición para actualizar secundario 1
+		srv_sec_1 = requests.post("http://localhost:100/relojes/refresh_hour")
+		salida = json.loads(srv_sec_1.text)
+		actualizados['secundario_01'] = {'updated':salida['ok'] }
+	except Exception as ex:
+		actualizados['secundario_01'] = {'updated':False, 'error':str(ex) }
+	
+	try:
+		#Petición para actualizar secundario 2
+		srv_sec_2 = requests.post("http://localhost:110/relojes/refresh_hour")
+		salida = json.loads(srv_sec_2.text)
+		actualizados['secundario_02'] = {'updated':salida['ok']}
+	except Exception as ex:
+		actualizados['secundario_02'] = {'updated':False, 'error':str(ex)}
 
-	#Petición para actualizar principal
-	#Petición para actualizar secundario 1
-	#Petición para actualizar secundario 2
-
+	response['ok'] = actualizados['principal']['updated'] and \
+						actualizados['secundario_01']['updated'] and \
+						actualizados['secundario_02']['updated']
 	#Formatear la respuesta con la info de exito o fracaso de update en 
 	#cada servidor
-
+	end = datetime.datetime.now()
+	response['description'] = actualizados
+	response['timing'] = str(end - now)
 	return jsonify( response )
 
 
 if __name__ == "__main__":
+	now = datetime.datetime.now()
+	h = Reloj("Maestro", hora=now.hour, mins=now.minute, segs=now.second)
+	
+	###Pensé que esto funcionaría :
+	###h = threading.Thread(target=createHilos, name="Hilo "+str(hilo), args=("#"+str(hilo),) )
+	### :(
+	relojes.append(h)
+	relojes[0].start()
+	print("Inició hilo:",hilo)
+	hilo+=1
 	app.run(port=80, debug=True)
 
