@@ -42,7 +42,7 @@ def goToMain():
 def getHourFromMaster():
 	#Solicitará la hora al principal
 	#Solicitará ritmo de reloj al principal
-	r = requests.get("http://localhost:90/relojes/getTime/0/")
+	r = requests.get("http://10.100.74.232/relojes/getTime/0/")
 	salida = json.loads(r.text)
 	horaSrvrPrincipal = salida['description']['tiempo']
 	if r.status_code == 200 and salida['ok'] == True:
@@ -84,7 +84,7 @@ def getTimeFromClock(idReloj):
 if __name__ == "__main__":
 	#Solicitará la hora al principal
 	#Solicitará ritmo de reloj al principal
-	r = requests.get("http://localhost:90/relojes/getTime/0/")
+	r = requests.get("http://10.100.74.232/relojes/getTime/0/")
 	salida = json.loads(r.text)
 	horaSrvrPrincipal = salida['description']['tiempo']
 	if r.status_code == 200 and salida['ok'] == True:
@@ -101,4 +101,4 @@ if __name__ == "__main__":
 		relojes[0].start()
 		print("Inició hilo:",hilo)
 
-	app.run(port=100, debug=True)
+	app.run(port=80, debug=True, host='0.0.0.0')

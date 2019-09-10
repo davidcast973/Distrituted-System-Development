@@ -102,16 +102,16 @@ def sendUpdateTo():
 	now = datetime.datetime.now()
 	try:
 		#Petición para actualizar principal
-		principal = requests.post("http://localhost:90/relojes/refresh_hour")
+		principal = requests.post("http://10.100.74.232/relojes/refresh_hour")
 		salida = json.loads(principal.text)
 		actualizados['principal'] = {'updated':salida['ok'] }
 	except Exception as ex:
 		actualizados['principal'] = {'updated':False, 'error':str(ex) }
 	
 	#Actualizamos los secundarios con hilos. Ya que el principal es el bueno
-	hilo = threading.Thread(target=actualiza_secundarios, name="Sec1", args=("http://localhost:100/relojes/refresh_hour", 0))
+	hilo = threading.Thread(target=actualiza_secundarios, name="Sec1", args=("http://10.100.77.24/relojes/refresh_hour", 0))
 	hilo.start()
-	hilo2 = threading.Thread(target=actualiza_secundarios, name="Sec1", args=("http://localhost:120/relojes/refresh_hour", 1))
+	hilo2 = threading.Thread(target=actualiza_secundarios, name="Sec1", args=("http://10.100.77.29/relojes/refresh_hour", 1))
 	hilo2.start()
 	#Matamos los hilos creados.
 	hilo.join()
@@ -143,5 +143,5 @@ if __name__ == "__main__":
 	relojes[0].start()
 	print("Inició hilo:",hilo)
 	hilo+=1
-	app.run(port=80, debug=True)
+	app.run(port=80, debug=True, host='0.0.0.0')
 

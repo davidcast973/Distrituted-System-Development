@@ -40,7 +40,7 @@ def goToMain():
 #Es la ruta principal, la que inicia los relojes
 @app.route("/relojes/refresh_hour", methods=['POST'])
 def getHourFromMaster():
-	r = requests.get("http://localhost:80/relojes/getTime/0/")
+	r = requests.get("http://10.100.76.68/relojes/getTime/0/")
 	salida = json.loads(r.text)
 	horaSrvMaster = salida['description']['tiempo']
 	if r.status_code == 200 and salida['ok'] == True:
@@ -81,7 +81,7 @@ def getTimeFromClock(idReloj):
 if __name__ == "__main__":
 		#Pide la hora al servidor maestro
 	#Instancia el reloj de este servidor con la del maestro
-	r = requests.get("http://localhost:80/relojes/getTime/0/")
+	r = requests.get("http://10.100.76.68/relojes/getTime/0/")
 	salida = json.loads(r.text)
 	relojes=[]
 	if r.status_code == 200 and salida['ok'] == True:
@@ -94,5 +94,5 @@ if __name__ == "__main__":
 		relojes.append(h)
 		relojes[0].start()
 		print("Inició hilo:",hilo)
-	app.run(port=90, debug=True)
+	app.run(port=80, debug=True, host='0.0.0.0')
 	
