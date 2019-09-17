@@ -17,7 +17,7 @@ hilo = 1
 relojes = []
 resultados = [None]*3
 
-#Esta ruta predeterminada lo redirije a /relojes
+#Esta ruta predeterminada lo redirije a /numeros
 @app.route("/")
 def goToMain():
 	#Regresa un json dummy de relojes desplegados
@@ -25,13 +25,14 @@ def goToMain():
 	
 	return flask.redirect("/reloj_maestro", code=302)
 
-#Es la ruta principal, la que inicia los relojes
-@app.route("/reloj_maestro")
+#Es la ruta de la vista del coordinador
+@app.route("/coordinador")
 def main():
-	return render_template("reloj_maestro.html")
+	#En esta vista se reflejarán los envíos de cada servidor jugador (3 srvrs jugadores)
+	return render_template("interfaz_coordinador.html")
 
 #Retorna un json 
-@app.route("/relojes/getTime/<int:idReloj>/")
+@app.route("/numeros/getTime/<int:idReloj>/")
 def getTimeFromClock(idReloj):
 	try:
 		return jsonify({
@@ -51,7 +52,7 @@ def getTimeFromClock(idReloj):
 		return jsonify({'ok':False, 'description': str(ex)})
 
 #Esta ruta/función será la que edite los relojes
-@app.route("/relojes/edit/<int:idReloj>/<int:hora>/<int:mins>", methods=['POST'])
+@app.route("/numeros/edit/<int:idReloj>/<int:hora>/<int:mins>", methods=['POST'])
 def editaReloj(idReloj,hora, mins):#, segs):
 	try:
 		relojes[idReloj].hora = hora 
@@ -61,7 +62,7 @@ def editaReloj(idReloj,hora, mins):#, segs):
 	except Exception as ex:
 		return jsonify({'ok':False, 'description': str(ex)})
 
-@app.route("/relojes/pausa/<int:idReloj>/<opcion>")
+@app.route("/numeros/pausa/<int:idReloj>/<opcion>")
 def pausaReloj(idReloj, opcion):
 	if opcion == "pausa":
 		relojes[idReloj].paused = True
@@ -69,7 +70,7 @@ def pausaReloj(idReloj, opcion):
 		relojes[idReloj].paused = False
 	return jsonify({'ok':True, 'description':{'reloj':idReloj, 'pausado':relojes[idReloj].paused}})
 
-@app.route("/relojes/<int:idReloj>/<opcion>")
+@app.route("/numeros/<int:idReloj>/<opcion>")
 def cambiaRitmo(idReloj, opcion):
 	response = {'ok':False, 'description':""}
 	try:
@@ -85,63 +86,27 @@ def cambiaRitmo(idReloj, opcion):
 		response['description'] = str(ex)
 	return jsonify( response )
 
-def actualiza_secundarios(url, index):
-	try:
-		srv_sec_1 = requests.post(url)
-		salida = json.loads(srv_sec_1.text)
-		resultados[index]={'updated':salida['ok']}
-	except Exception as ex:
-		resultados[index] = {'updated':False, 'error':str(ex) }
+#Esta función guardará los datos recibidos en la Base de datos
+def guardaEnBd(datosRequest):
+	pass
 
-#Esta ruta/función, será el detonador que actualizará a los demás servidores
-@app.route("/relojes/sendUpdate", methods=['POST'])
-def sendUpdateTo():
-
+#Esta ruta/función, será la que recibirá los archivos de los jugadores
+@app.route("/numeros/save-sum-numbers", methods=['POST'])
+def saveSumNumbers():
 	response = {'ok':False, 'description':""}
-	actualizados = {}
-	now = datetime.datetime.now()
-	try:
-		#Petición para actualizar principal
-		principal = requests.post("http://10.100.74.232/relojes/refresh_hour")
-		salida = json.loads(principal.text)
-		actualizados['principal'] = {'updated':salida['ok'] }
-	except Exception as ex:
-		actualizados['principal'] = {'updated':False, 'error':str(ex) }
-	
-	#Actualizamos los secundarios con hilos. Ya que el principal es el bueno
-	hilo = threading.Thread(target=actualiza_secundarios, name="Sec1", args=("http://10.100.77.24/relojes/refresh_hour", 0))
-	hilo.start()
-	hilo2 = threading.Thread(target=actualiza_secundarios, name="Sec1", args=("http://10.100.77.29/relojes/refresh_hour", 1))
-	hilo2.start()
-	#Matamos los hilos creados.
-	hilo.join()
-	hilo2.join()
-	#Formulamos respuesta de servicio
-	actualizados['secundario_01'] = resultados[0]
-	actualizados['secundario_02'] = resultados[1]
-
-	response['ok'] = actualizados['principal']['updated'] and \
-						actualizados['secundario_01']['updated'] and \
-						actualizados['secundario_02']['updated']
-	#Formatear la respuesta con la info de exito o fracaso de update en 
-	#cada servidor
-	end = datetime.datetime.now()
-
-	response['description'] = actualizados
-	response['timing'] = str(end - now)
+	datos = request
+	guardaEnBd(datos)
 	return jsonify( response )
 
 
 if __name__ == "__main__":
 	now = datetime.datetime.now()
 	h = Reloj("Maestro", hora=now.hour, mins=now.minute, segs=now.second)
-	
-	###Pensé que esto funcionaría :
-	###h = threading.Thread(target=createHilos, name="Hilo "+str(hilo), args=("#"+str(hilo),) )
-	### :(
+
 	relojes.append(h)
 	relojes[0].start()
 	print("Inició hilo:",hilo)
 	hilo+=1
+	print("Inició coordinador")
 	app.run(port=80, debug=True, host='0.0.0.0')
 
