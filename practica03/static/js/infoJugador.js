@@ -2,6 +2,10 @@
 
 $(function(){
     var a = "";
+
+    $("#sendButton").click(function(){
+        swal("Enviando", "Enviando archivo a coordinador", "info");
+    });
     
     a = setInterval(function(){
         $.ajax({
@@ -34,32 +38,6 @@ $(function(){
         console.log(data);
         });
     }, 500);
-
-    jugadores = [0,1,2];
-
-    jugadores.forEach(jugador => {
-        a = setInterval(function(){
-            $.ajax({
-                type: "GET",
-                url: `/numeros/getResultOf/${jugador}`,
-                //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
-                contentType:'application/json;charset=UTF-8',    
-            })
-            .done(function(data) {
-                if(data.ok == true){
-                    document.getElementById(`sumJ${jugador}`).innerHTML = data.description.suma;
-                }else{
-                    console.log("Ocurrió un error:");
-                    console.log(data);
-                    console.log("---------------------------");
-                }    
-            })
-            .fail(function(data) {
-            console.log( "error" );
-            console.log(data);
-            });
-        }, 1000);
-    });
     
     
     $("#edit1").click(function(){

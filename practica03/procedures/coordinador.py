@@ -17,7 +17,7 @@ def leeArchivoTxt(pathFilename):
 	numsStr = archivo.readlines()
 	numsList = []
 	for num in numsStr:
-		numsList.append( int(num) )
+		numsList.append( int(num.strip()) )
 	return numsList
 
 #Esta función guardará los datos recibidos en la Base de datos

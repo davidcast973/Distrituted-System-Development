@@ -11,6 +11,7 @@ import datetime
 import os
 import socket
 import sys
+import time
 
 #Includes de práctica:
 from classes.Reloj import Reloj
@@ -114,11 +115,13 @@ def enviaTxt2Coordinador(fileToSend):
 		response['ok'] = True
 	
 	print("Respuesta recibida:",result.text)
+	#return render_template_string(result.text)
 	resp = json.loads( result.text )
 	if resp['ok'] == True:
 		response['description'] = "Archivo enviado correctamente a coordinador"
-		os.remove('./static/uploads/jugadores/'+fileToSend.filename)
-	
+		#hiloRemoveFile = threading.Thread(target=remueveArchivoRecibido, name="Remueve_archivo", args=(fileToSend.filename,None))
+		#hiloRemoveFile.start()
+		#hiloRemoveFile.join()
 	return response
 	
 #Esta ruta/función, será la que recibirá el .txt de los front
@@ -134,9 +137,17 @@ def sendNumbers():
 		
 		envio = enviaTxt2Coordinador( file )
 		
-		return jsonify( envio )
+		#return jsonify( envio )
+		return flask.redirect("/jugador", code=302)
 
 
+def remueveArchivoRecibido(archivo, sinuso):
+	while True:
+		try:
+			os.remove('./static/uploads/jugadores/'+archivo)
+			return True
+		except:
+			time.sleep(1)
 
 
 if __name__ == "__main__":

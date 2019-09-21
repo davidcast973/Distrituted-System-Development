@@ -112,15 +112,29 @@ def saveSumNumbers():
 		
 		listaNums = leeArchivoTxt( os.path.join(app.config['UPLOAD_FOLDER'], filename) )
 		suma = sum(listaNums)
+
+	
+		resultados[int(numeroServer)-1]['suma'] = suma
+		print("SE cambiaron los numeros:", resultados[int(numeroServer)-1])
 		guardado = guardaEnBd( ip_origen, numeroServer, suma, relojes[0], nombreEquipoOrigen)
 
 		return jsonify( guardado )
+	else:
+		return jsonify( response )
 
-
+@app.route("/numeros/getResultOf/<int:idJugador>", methods=['GET'])
+def exponeSumaDeJugador(idJugador):
+	if idJugador in [0,1,2]:
+		return jsonify(ok=True, description=resultados[idJugador])
+	else:
+		return jsonify(ok=False, description="Jugador Inexistente")
 
 if __name__ == "__main__":
 	now = datetime.datetime.now()
 	h = Reloj("Maestro", hora=now.hour, mins=now.minute, segs=now.second)
+	
+	for a in range(0, len(resultados)):
+		resultados[a] = {'idJugador': a, 'suma':'-'}
 
 	relojes.append(h)
 	relojes[0].start()
