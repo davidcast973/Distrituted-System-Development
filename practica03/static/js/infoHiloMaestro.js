@@ -150,7 +150,7 @@ function add1(){
       console.log(this.responseText);
     }
   };
-  xhttp.open("GET", "/relojes/0/A", true);
+  xhttp.open("GET", "/numeros/0/A", true);
   xhttp.send();
 }
 
@@ -162,7 +162,7 @@ function sub1(){
       console.log(this.responseText);
     }
   };
-  xhttp.open("GET", "/relojes/0/D", true);
+  xhttp.open("GET", "/numeros/0/D", true);
   xhttp.send();
 }
 

@@ -106,8 +106,9 @@ def enviaTxt2Coordinador(fileToSend):
 
 	archivo_a_enviar = {'archivoTxt': open('./static/uploads/jugadores/'+fileToSend.filename, 'rb')}
 
+	data_send = {'servidor':numeroServidorJugador, 'equipo':socket.getfqdn()}
 	
-	result = requests.post("http://localhost:80/numeros/save-sum-numbers", files=archivo_a_enviar, json={'servidor':numeroServidorJugador})
+	result = requests.post("http://localhost:80/numeros/save-sum-numbers", data=data_send ,files=archivo_a_enviar )
 	
 	if result.status_code == requests.codes.ok:
 		response['ok'] = True

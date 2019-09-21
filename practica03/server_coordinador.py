@@ -9,12 +9,15 @@ import requests
 import json
 import datetime
 import os
+import sys
 
+sys.path.append("./classes")
+sys.path.append("./procedures")
 #Includes de práctica:
-from classes.Reloj import Reloj
+from Reloj import Reloj
+from coordinador import allowed_file, leeArchivoTxt, guardaEnBd, connectToBd
 
 UPLOAD_FOLDER = './static/uploads/coordinador'
-ALLOWED_EXTENSIONS = {'txt'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -22,10 +25,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 hilo = 1
 relojes = []
 resultados = [None]*3
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 #Esta ruta predeterminada lo redirije a /numeros
 @app.route("/")
@@ -97,33 +96,13 @@ def cambiaRitmo(idReloj, opcion):
 	return jsonify( response )
 
 
-def leeArchivoTxt(pathFilename):
-	archivo = open(pathFilename, "r")
-	numsStr = archivo.readlines()
-	numsList = []
-	for num in numsStr:
-		numsList.append( int(num) )
-	return numsList
-
-#Esta función guardará los datos recibidos en la Base de datos
-def guardaEnBd(ip_origen, numeroServer, suma, relojObject):
-	resultado = {'ok':True, 'description':suma}
-
-	now = datetime.datetime.now()
-	datetimeServer = str(now.year)+"-"+str(now.month)+"-"+str(now.day)+" "
-
-	datetimeServer += str(relojObject.hora)+":"+str(relojObject.mins)+":"+str(relojObject.segs)
-
-	bd = connectToBd()
-	bd.doQuery("INSERT INTO sumas(date_added, ip_origen, numero_servidor, suma) VALUES('{}', '{}', '{}', '{}');")
-
-	return resultado
-
 #Esta ruta/función, será la que recibirá los archivos de los jugadores
 @app.route("/numeros/save-sum-numbers", methods=['POST'])
 def saveSumNumbers():
 	response = {'ok':False, 'description':"Check on the console :D"}
-	numeroServer = request.json.get('servidor',-1)
+	formReq = request.form
+	numeroServer = formReq.get('servidor',-1)
+	nombreEquipoOrigen = formReq.get('equipo',-1)
 	file = request.files['archivoTxt']
 	ip_origen = request.remote_addr
 
@@ -133,7 +112,7 @@ def saveSumNumbers():
 		
 		listaNums = leeArchivoTxt( os.path.join(app.config['UPLOAD_FOLDER'], filename) )
 		suma = sum(listaNums)
-		guardado = guardaEnBd( ip_origen, numeroServer, suma, relojes[0])
+		guardado = guardaEnBd( ip_origen, numeroServer, suma, relojes[0], nombreEquipoOrigen)
 
 		return jsonify( guardado )
 
