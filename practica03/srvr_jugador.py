@@ -1,21 +1,35 @@
 #!"C:/Program Files/Python37/python.exe"
 from flask import Flask, jsonify, send_file, request, render_template ,render_template_string, make_response, send_from_directory
 from flask_cors import CORS, cross_origin
+from werkzeug.utils import secure_filename
 import flask
 import threading
 import time
 import requests
 import json
 import datetime
+import os
+import socket
+import sys
 
 #Includes de práctica:
 from classes.Reloj import Reloj
 
+UPLOAD_FOLDER = './static/uploads/jugadores'
+ALLOWED_EXTENSIONS = {'txt'}
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+numeroServidorJugador = 0
 
 hilo = 1
 relojes = []
 resultados = [None]*3
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 #Esta ruta predeterminada lo redirije a /numeros
 @app.route("/")
@@ -23,13 +37,13 @@ def goToMain():
 	#Regresa un json dummy de relojes desplegados
 	#return jsonify({'ok':True, 'description':'Deployed'})
 	
-	return flask.redirect("/reloj_maestro", code=302)
+	return flask.redirect("/jugador", code=302)
 
 #Es la ruta de la vista del coordinador
-@app.route("/coordinador")
+@app.route("/jugador")
 def main():
 	#En esta vista se reflejarán los envíos de cada servidor jugador (3 srvrs jugadores)
-	return render_template("interfaz_coordinador.html")
+	return render_template("server_jugador.html", server=numeroServidorJugador)
 
 #Retorna un json 
 @app.route("/numeros/getTime/<int:idReloj>/")
@@ -87,27 +101,51 @@ def cambiaRitmo(idReloj, opcion):
 	return jsonify( response )
 
 #Esta función enviará el archivo .txt al coordinador
-def enviaTxt2Coordinador(datosRequest):
-	pass
+def enviaTxt2Coordinador(fileToSend):
+	response = {'ok':False, 'description':""}
 
+	archivo_a_enviar = {'archivoTxt': open('./static/uploads/jugadores/'+fileToSend.filename, 'rb')}
+
+	
+	result = requests.post("http://localhost:80/numeros/save-sum-numbers", files=archivo_a_enviar, json={'servidor':numeroServidorJugador})
+	
+	if result.status_code == requests.codes.ok:
+		response['ok'] = True
+	
+	print("Respuesta recibida:",result.text)
+	resp = json.loads( result.text )
+	if resp['ok'] == True:
+		response['description'] = "Archivo enviado correctamente a coordinador"
+		os.remove('./static/uploads/jugadores/'+fileToSend.filename)
+	
+	return response
+	
 #Esta ruta/función, será la que recibirá el .txt de los front
 #del servidor jugador
-@app.route("/numeros/", methods=['POST'])
+@app.route("/numeros/send-numbers", methods=['POST'])
 def sendNumbers():
-	response = {'ok':False, 'description':""}
-	datos = request
-	enviaTxt2Coordinador(datos)
-	return jsonify( response )
+	
+	file = request.files['archivo']
+
+	if file and allowed_file(file.filename):
+		filename = secure_filename(file.filename)
+		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+		
+		envio = enviaTxt2Coordinador( file )
+		
+		return jsonify( envio )
+
+
 
 
 if __name__ == "__main__":
+	numeroServidorJugador = int(sys.argv[1])
 	now = datetime.datetime.now()
 	h = Reloj("Jugador", hora=now.hour, mins=now.minute, segs=now.second)
-
 	relojes.append(h)
 	relojes[0].start()
 	print("Inició hilo:",hilo)
 	hilo+=1
 	print("Inició Jugador X")
-	app.run(port=80, debug=True, host='0.0.0.0')
+	app.run(port=90, debug=True, host='0.0.0.0')
 

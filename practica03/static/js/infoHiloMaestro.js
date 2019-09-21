@@ -6,7 +6,7 @@ $(function(){
     a = setInterval(function(){
         $.ajax({
             type: "GET",
-            url: '/relojes/getTime/0/',
+            url: '/numeros/getTime/0/',
             //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
             contentType:'application/json;charset=UTF-8',    
         })

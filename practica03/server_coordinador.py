@@ -1,21 +1,31 @@
 #!"C:/Program Files/Python37/python.exe"
 from flask import Flask, jsonify, send_file, request, render_template ,render_template_string, make_response, send_from_directory
 from flask_cors import CORS, cross_origin
+from werkzeug.utils import secure_filename
 import flask
 import threading
 import time
 import requests
 import json
 import datetime
+import os
 
 #Includes de práctica:
 from classes.Reloj import Reloj
 
+UPLOAD_FOLDER = './static/uploads/coordinador'
+ALLOWED_EXTENSIONS = {'txt'}
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 hilo = 1
 relojes = []
 resultados = [None]*3
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 #Esta ruta predeterminada lo redirije a /numeros
 @app.route("/")
@@ -23,13 +33,13 @@ def goToMain():
 	#Regresa un json dummy de relojes desplegados
 	#return jsonify({'ok':True, 'description':'Deployed'})
 	
-	return flask.redirect("/reloj_maestro", code=302)
+	return flask.redirect("/coordinador", code=302)
 
 #Es la ruta de la vista del coordinador
 @app.route("/coordinador")
 def main():
 	#En esta vista se reflejarán los envíos de cada servidor jugador (3 srvrs jugadores)
-	return render_template("interfaz_coordinador.html")
+	return render_template("server_coordinador.html")
 
 #Retorna un json 
 @app.route("/numeros/getTime/<int:idReloj>/")
@@ -86,17 +96,47 @@ def cambiaRitmo(idReloj, opcion):
 		response['description'] = str(ex)
 	return jsonify( response )
 
+
+def leeArchivoTxt(pathFilename):
+	archivo = open(pathFilename, "r")
+	numsStr = archivo.readlines()
+	numsList = []
+	for num in numsStr:
+		numsList.append( int(num) )
+	return numsList
+
 #Esta función guardará los datos recibidos en la Base de datos
-def guardaEnBd(datosRequest):
-	pass
+def guardaEnBd(ip_origen, numeroServer, suma, relojObject):
+	resultado = {'ok':True, 'description':suma}
+
+	now = datetime.datetime.now()
+	datetimeServer = str(now.year)+"-"+str(now.month)+"-"+str(now.day)+" "
+
+	datetimeServer += str(relojObject.hora)+":"+str(relojObject.mins)+":"+str(relojObject.segs)
+
+	bd = connectToBd()
+	bd.doQuery("INSERT INTO sumas(date_added, ip_origen, numero_servidor, suma) VALUES('{}', '{}', '{}', '{}');")
+
+	return resultado
 
 #Esta ruta/función, será la que recibirá los archivos de los jugadores
 @app.route("/numeros/save-sum-numbers", methods=['POST'])
 def saveSumNumbers():
-	response = {'ok':False, 'description':""}
-	datos = request
-	guardaEnBd(datos)
-	return jsonify( response )
+	response = {'ok':False, 'description':"Check on the console :D"}
+	numeroServer = request.json.get('servidor',-1)
+	file = request.files['archivoTxt']
+	ip_origen = request.remote_addr
+
+	if file and allowed_file(file.filename):
+		filename = secure_filename(file.filename)
+		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+		
+		listaNums = leeArchivoTxt( os.path.join(app.config['UPLOAD_FOLDER'], filename) )
+		suma = sum(listaNums)
+		guardado = guardaEnBd( ip_origen, numeroServer, suma, relojes[0])
+
+		return jsonify( guardado )
+
 
 
 if __name__ == "__main__":
