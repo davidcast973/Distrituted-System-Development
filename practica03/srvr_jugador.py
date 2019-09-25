@@ -109,7 +109,7 @@ def enviaTxt2Coordinador(fileToSend):
 
 	data_send = {'servidor':numeroServidorJugador, 'equipo':socket.getfqdn()}
 	
-	result = requests.post("http://localhost:80/numeros/save-sum-numbers", data=data_send ,files=archivo_a_enviar )
+	result = requests.post("http://10.100.72.2:80/numeros/save-sum-numbers", data=data_send ,files=archivo_a_enviar )
 	
 	if result.status_code == requests.codes.ok:
 		response['ok'] = True
@@ -159,5 +159,5 @@ if __name__ == "__main__":
 	print("Inició hilo:",hilo)
 	hilo+=1
 	print("Inició Jugador X")
-	app.run(port=90, debug=True, host='0.0.0.0')
+	app.run(port=80, debug=True, host='0.0.0.0')
 
