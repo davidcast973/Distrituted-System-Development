@@ -1,0 +1,14 @@
+{
+    "server_1":{
+        "numero" : 1,
+        "puerto" : 80,
+        "database" : "resguardo_sumas_1",
+        "send_to" : "localhost:85"       
+    },
+    "server_2":{
+        "numero" : 2,
+        "puerto" : 85,
+        "database" : "resguardo_sumas_2",
+        "send_to" : "localhost:80"       
+    }
+}
