@@ -2,6 +2,10 @@ import sys
 import os
 import datetime
 import requests
+import json
+import pymysql
+import mysql.connector as mariadb
+
 
 sys.path.append("./libs")
 sys.path.append("./../")
@@ -11,8 +15,8 @@ ALLOWED_EXTENSIONS = {'txt'}
 
 
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+	return '.' in filename and \
+		   filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def leeArchivoTxt(pathFilename):
 	archivo = open(pathFilename, "r")
@@ -31,14 +35,14 @@ def guardaEnBd(ip_origen, numeroServer, suma, relojObject, nombreEquipo, dbName=
 
 	datetimeServer += str(relojObject.hora)+":"+str(relojObject.mins)+":"+str(relojObject.segs)
 
-	bd = connectToBd(dbName=dbName)
+	bd = connectToBd(dbName=dbName['name'])
+
 	a = bd.doQuery("""
 	INSERT INTO resultados_envios(date_added, ip_origen, nombre_equipo, num_jugador, resultado_suma) 
 	VALUES('{}', '{}', '{}', '{}', '{}');""".format(
-			datetimeServer, ip_origen, nombreEquipo, numeroServer, suma
+			str(datetimeServer), str(ip_origen), str(nombreEquipo), str(numeroServer), str(suma)
 		)
 	)
-
 	resultado['description'] = "Resultado almacenado"
 
 	return resultado
@@ -58,13 +62,14 @@ def sendResultToOtherServer(ip_origen, numeroServer, suma, nombreEquipoOrigen):
 	return r.text
 
 def connectToBd(dbName=None):
+
 	bd_name=dbName
 	if dbName is None:
-		bd_name = "resguardo_sumas"
-	#La conexión conla BD
+		bd_name = "resguardo_sumas_1"
+
 	return Bd(	
-		hostname = 'localhost',
-		username = 'root',
-		password = '',
+		hostname = "10.100.74.181",
+		username = "root",
+		password = "12345",
 		database = bd_name
 	)

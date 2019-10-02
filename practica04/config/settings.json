@@ -1,14 +1,31 @@
 {
+
+    "jugador_1":{
+        "send_to": "10.100.74.232:80"
+    },
+    "jugador_2":{
+        "send_to": "10.100.66.204:80"
+    },
     "server_1":{
         "numero" : 1,
         "puerto" : 80,
-        "database" : "resguardo_sumas_1",
-        "send_to" : "localhost:85"       
+        "database" : {
+            "name": "resguardo_sumas_1",
+            "server": "10.100.74.181",
+            "user": "root",
+            "password": ""
+        },
+        "send_to" : "10.100.66.204:80"       
     },
     "server_2":{
         "numero" : 2,
-        "puerto" : 85,
-        "database" : "resguardo_sumas_2",
+        "puerto" : 80,
+        "database" : {
+            "name": "resguardo_sumas_2",
+            "server": "10.100.74.181",
+            "user": "root",
+            "password": ""
+        },
         "send_to" : "localhost:80"       
     }
 }
