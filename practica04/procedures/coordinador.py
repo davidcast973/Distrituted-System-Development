@@ -68,7 +68,7 @@ def connectToBd(dbName=None):
 		bd_name = "resguardo_sumas_1"
 
 	return Bd(	
-		hostname = "10.100.74.181",
+		hostname = "10.100.67.166",
 		username = "root",
 		password = "12345",
 		database = bd_name

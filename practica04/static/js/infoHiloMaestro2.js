@@ -35,7 +35,7 @@ $(function(){
         });
     }, 500);
 
-    jugadores = [0];
+    jugadores = [1];
 
     jugadores.forEach(jugador => {
         a = setInterval(function(){

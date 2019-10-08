@@ -40,7 +40,7 @@ def goToMain():
 @app.route("/coordinador")
 def main():
 	#En esta vista se reflejarán los envíos de cada servidor jugador (3 srvrs jugadores)
-	return render_template("server_coordinador.html")
+	return render_template("server_coordinador.html", servidor = numeroServidor)
 
 #Retorna un json 
 @app.route("/numeros/getTime/<int:idReloj>/")
