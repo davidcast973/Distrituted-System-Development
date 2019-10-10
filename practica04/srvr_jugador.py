@@ -108,8 +108,9 @@ def enviaTxt2Coordinador(fileToSend):
 	archivo_a_enviar = {'archivoTxt': open('./static/uploads/jugadores/'+fileToSend.filename, 'rb')}
 
 	data_send = {'servidor':numeroServidorJugador, 'equipo':socket.getfqdn()}
+	env = json.loads( open("./config/settings.json","r").read() )['jugador_'+str(numeroServidorJugador)]
 	
-	result = requests.post("http://10.100.74.232:80/numeros/save-sum-numbers", data=data_send ,files=archivo_a_enviar )
+	result = requests.post("http://{}/numeros/save-sum-numbers".format(env['send_to']), data=data_send ,files=archivo_a_enviar )
 	
 	if result.status_code == requests.codes.ok:
 		response['ok'] = True
@@ -152,6 +153,7 @@ def remueveArchivoRecibido(archivo, sinuso):
 
 if __name__ == "__main__":
 	numeroServidorJugador = int(sys.argv[1])
+	puertoJugador = int(sys.argv[2])
 	now = datetime.datetime.now()
 	h = Reloj("Jugador", hora=now.hour, mins=now.minute, segs=now.second)
 	relojes.append(h)
@@ -159,5 +161,5 @@ if __name__ == "__main__":
 	print("Inició hilo:",hilo)
 	hilo+=1
 	print("Inició Jugador X")
-	app.run(port=80, debug=True, host='0.0.0.0')
+	app.run(port=puertoJugador, debug=True, host='0.0.0.0')
 

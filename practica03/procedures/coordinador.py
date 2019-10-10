@@ -44,8 +44,8 @@ def guardaEnBd(ip_origen, numeroServer, suma, relojObject, nombreEquipo):
 def connectToBd():
 	#La conexión conla BD
 	return Bd(	
-		hostname = 'localhost',
+		hostname = '10.100.67.166',
 		username = 'root',
-		password = '',
+		password = '12345',
 		database = 'resguardo_sumas'
 	)

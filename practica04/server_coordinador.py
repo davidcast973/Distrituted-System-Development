@@ -9,28 +9,24 @@ import requests
 import json
 import datetime
 import os
-import socket
 import sys
-import time
 
+sys.path.append("./classes")
+sys.path.append("./procedures")
 #Includes de práctica:
-from classes.Reloj import Reloj
+from Reloj import Reloj
+from coordinador import allowed_file, leeArchivoTxt, guardaEnBd, connectToBd,sendResultToOtherServer
 
-UPLOAD_FOLDER = './static/uploads/jugadores'
-ALLOWED_EXTENSIONS = {'txt'}
+UPLOAD_FOLDER = './static/uploads/coordinador'
+numeroServidor = int(sys.argv[1])
+env = json.loads(open("./config/settings.json", "r").read())['server_'+str(numeroServidor)]
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-numeroServidorJugador = 0
-
 hilo = 1
 relojes = []
 resultados = [None]*3
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 #Esta ruta predeterminada lo redirije a /numeros
 @app.route("/")
@@ -38,13 +34,13 @@ def goToMain():
 	#Regresa un json dummy de relojes desplegados
 	#return jsonify({'ok':True, 'description':'Deployed'})
 	
-	return flask.redirect("/jugador", code=302)
+	return flask.redirect("/coordinador", code=302)
 
 #Es la ruta de la vista del coordinador
-@app.route("/jugador")
+@app.route("/coordinador")
 def main():
 	#En esta vista se reflejarán los envíos de cada servidor jugador (3 srvrs jugadores)
-	return render_template("server_jugador.html", server=numeroServidorJugador)
+	return render_template("server_coordinador.html", servidor = numeroServidor)
 
 #Retorna un json 
 @app.route("/numeros/getTime/<int:idReloj>/")
@@ -101,63 +97,73 @@ def cambiaRitmo(idReloj, opcion):
 		response['description'] = str(ex)
 	return jsonify( response )
 
-#Esta función enviará el archivo .txt al coordinador
-def enviaTxt2Coordinador(fileToSend):
-	response = {'ok':False, 'description':""}
-
-	archivo_a_enviar = {'archivoTxt': open('./static/uploads/jugadores/'+fileToSend.filename, 'rb')}
-
-	data_send = {'servidor':numeroServidorJugador, 'equipo':socket.getfqdn()}
-	
-	result = requests.post("http://10.100.74.232:80/numeros/save-sum-numbers", data=data_send ,files=archivo_a_enviar )
-	
-	if result.status_code == requests.codes.ok:
-		response['ok'] = True
-	
-	print("Respuesta recibida:",result.text)
-	#return render_template_string(result.text)
-	resp = json.loads( result.text )
-	if resp['ok'] == True:
-		response['description'] = "Archivo enviado correctamente a coordinador"
-		#hiloRemoveFile = threading.Thread(target=remueveArchivoRecibido, name="Remueve_archivo", args=(fileToSend.filename,None))
-		#hiloRemoveFile.start()
-		#hiloRemoveFile.join()
-	return response
-	
-#Esta ruta/función, será la que recibirá el .txt de los front
-#del servidor jugador
-@app.route("/numeros/send-numbers", methods=['POST'])
-def sendNumbers():
-	
-	file = request.files['archivo']
+#Esta ruta/función, será la que recibirá los archivos de los jugadores
+@app.route("/numeros/save-sum-numbers", methods=['POST'])
+def saveSumNumbers():
+	response = {'ok':False, 'description':"Check on the console :D"}
+	formReq = request.form
+	numeroServer = formReq.get('servidor',-1)
+	nombreEquipoOrigen = formReq.get('equipo',-1)
+	file = request.files['archivoTxt']
+	ip_origen = request.remote_addr
 
 	if file and allowed_file(file.filename):
 		filename = secure_filename(file.filename)
 		file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 		
-		envio = enviaTxt2Coordinador( file )
+		listaNums = leeArchivoTxt( os.path.join(app.config['UPLOAD_FOLDER'], filename) )
+		suma = sum(listaNums)
+
+		print("Hará hilo...")
+		hilo = threading.Thread(target=sendResultToOtherServer, name="Hilo_envio_datos_server", args=(ip_origen, numeroServer, suma, nombreEquipoOrigen))
+		hilo.start()
+		hilo.join()
+		print("Se supone que terminó hilo...")
+
+		resultados[int(numeroServer)-1]['suma'] = suma
+		#print("SE cambiaron los numeros:", resultados[int(numeroServer)-1])
+		guardado = guardaEnBd( ip_origen, numeroServer, suma, relojes[0], nombreEquipoOrigen, dbName=database)
 		
-		#return jsonify( envio )
-		return flask.redirect("/jugador", code=302)
 
+		return jsonify( guardado )
+	else:
+		return jsonify( response )
 
-def remueveArchivoRecibido(archivo, sinuso):
-	while True:
-		try:
-			os.remove('./static/uploads/jugadores/'+archivo)
-			return True
-		except:
-			time.sleep(1)
+@app.route("/numeros/save-result-peer", methods=["POST"])
+def guardaResultadoOtroServidor():
+	datos = request.json
+	
+	ip_origen = datos['ip_origin']
+	numeroServer = datos['num_jugador_origin'] 
+	suma = datos['resultado_suma']
+	nombreEquipoOrigen = datos['nombre_equipo_origin']
+	guardado = guardaEnBd( ip_origen, numeroServer, suma, relojes[0], nombreEquipoOrigen, dbName=database)
 
+	return jsonify( guardado )
+	
+
+@app.route("/numeros/getResultOf/<int:idJugador>", methods=['GET'])
+def exponeSumaDeJugador(idJugador):
+	if idJugador in [0,1,2]:
+		return jsonify(ok=True, description=resultados[idJugador])
+	else:
+		return jsonify(ok=False, description="Jugador Inexistente")
 
 if __name__ == "__main__":
-	numeroServidorJugador = int(sys.argv[1])
+	global database
+	
+	puertoServer = env['puerto']
+	database = env['database']
+	
 	now = datetime.datetime.now()
-	h = Reloj("Jugador", hora=now.hour, mins=now.minute, segs=now.second)
+	h = Reloj("Maestro", hora=now.hour, mins=now.minute, segs=now.second)
+	
+	for a in range(0, len(resultados)):
+		resultados[a] = {'idJugador': a, 'suma':'-'}
+
 	relojes.append(h)
 	relojes[0].start()
 	print("Inició hilo:",hilo)
 	hilo+=1
-	print("Inició Jugador X")
-	app.run(port=80, debug=True, host='0.0.0.0')
-
+	print("Inició coordinador")
+	app.run(port=puertoServer, debug=True, host='0.0.0.0')
