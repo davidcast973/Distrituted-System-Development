@@ -4,12 +4,14 @@ import datetime
 import requests
 import json
 import pymysql
-
+import time
+import socket
 
 
 sys.path.append("./libs")
 sys.path.append("./../")
 from sqlBd import Bd
+import server_coordinador
 
 ALLOWED_EXTENSIONS = {'txt'}
 
