@@ -4,12 +4,14 @@ import datetime
 import requests
 import json
 import pymysql
-
+import time
+import socket
 
 
 sys.path.append("./libs")
 sys.path.append("./../")
 from sqlBd import Bd
+import server_coordinador
 
 ALLOWED_EXTENSIONS = {'txt'}
 
@@ -68,7 +70,7 @@ def connectToBd(dbName=None):
 		bd_name = "resguardo_sumas_1"
 
 	return Bd(	
-		hostname = "10.100.67.166",
+		hostname = "10.100.70.115",
 		username = "root",
 		password = "12345",
 		database = bd_name
