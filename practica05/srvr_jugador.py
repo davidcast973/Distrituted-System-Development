@@ -154,8 +154,9 @@ def remueveArchivoRecibido(archivo, sinuso):
 if __name__ == "__main__":
 	numeroServidorJugador = int(sys.argv[1])
 	puertoJugador = int(sys.argv[2])
-	now = datetime.datetime.now()
-	h = Reloj("Jugador", hora=now.hour, mins=now.minute, segs=now.second)
+	#now = datetime.datetime.now()
+	#h = Reloj("Jugador", hora=now.hour, mins=now.minute, segs=now.second)
+	h = Reloj("Jugador")
 	relojes.append(h)
 	relojes[0].start()
 	print("Inició hilo:",hilo)

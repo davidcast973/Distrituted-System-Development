@@ -155,16 +155,27 @@ def exponeSumaDeJugador(idJugador):
 
 @app.route("/numeros/getUtcTime", methods=['GET'])
 def obtieneTiempoUTC():
-	global finalizo, relojes, hilo
+	global finalizo, relojes, hiloTime
 	host_name = socket.gethostname() 
 	host_ip = socket.gethostbyname(host_name)
 	print("Socket name info:",host_ip)
-	tiempo = {
-		"ip_server" : host_ip
-	}
 	now = datetime.datetime.now()
+	
+	reloj_local = datetime.datetime(
+		now.year,now.month, now.day,
+		#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
+		relojes[0].hora, relojes[0].mins, relojes[0].segs
+	)
+
+	tiempo = {
+		"ip_server" : host_ip,
+		"hora_server" : reloj_local.timestamp()
+	}
+
 	r = requests.post("http://localhost:100/time/get-current-time/", json=tiempo)
+
 	json_resp = json.loads(r.text)
+
 	if json_resp['ok'] == True:
 		tiempo = json_resp['description']['UTC-time']+json_resp['description']['ajuste']
 		#utc_time = datetime.datetime.fromtimestamp( tiempo, datetime.timezone.utc)
@@ -181,26 +192,32 @@ def obtieneTiempoUTC():
 			relojes[0].hora = utc_time.hour
 			relojes[0].mins = utc_time.minute
 			relojes[0].segs = utc_time.second
+			relojes[0].ritmo = 1
 		else:
 			print("Local es mayor")
 			dif = utc_time-reloj_local
 			relojes[0].ritmo += 5
-			hilo = threading.Thread(target=verificaHoraServerTime, name="Verifica_tiempo", args=(reloj_local,))
-			hilo.start()
+			#hiloTime = threading.Thread(target=verificaHoraServerTime, name="Verifica_tiempo", args=(reloj_local,))
+			#hiloTime.start()
+	
+	return flask.redirect("/", 302)
 
-	return flask.redirect("/numeros/getTime/0/", 302)
-
-def verificaHoraServerTime(horaLocal):
-	global hilo
-	continua = True
+def verificaHoraServerTime():
 	host_name = socket.gethostname() 
 	host_ip = socket.gethostbyname(host_name)
 	#print("Socket name info:",host_ip)
-	detalles_servidor = {
-		"ip_server" : host_ip
-	}
 
-	while continua == True:
+	while True:
+		now = datetime.datetime.now()
+		reloj_local = datetime.datetime(
+			now.year,now.month, now.day,
+			#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
+			relojes[0].hora, relojes[0].mins, relojes[0].segs
+		)
+		detalles_servidor = {
+			"ip_server" : host_ip,
+			"hora_server" : reloj_local.timestamp()
+		}
 		print("Estoy pidiendo la nueva hora...")
 		r = requests.post("http://localhost:100/time/get-current-time/", json=detalles_servidor)
 		try:
@@ -210,21 +227,36 @@ def verificaHoraServerTime(horaLocal):
 		if json_resp['ok'] == True:
 			tiempo = json_resp['description']['UTC-time']+json_resp['description']['ajuste']
 			utc_time = datetime.datetime.fromtimestamp( tiempo )
-			print("Hora UTC:", utc_time)
-			print("Hora Hilo:", horaLocal)
-			if horaLocal <= utc_time:
-				print("Ya cambió el ritmo a 1")
-				continua = False
+
+			#print("Hora UTC:", utc_time)
+			#print("Hora Hilo:", horaLocal)
+			print("Hora local:", reloj_local.strftime("%Y-%m-%d %H:%M:%S"), "| Hora UTC:", utc_time.strftime("%Y-%m-%d %H:%M:%S"))
+			print("Hora local:", reloj_local.strftime("%Y-%m-%d %H:%M:%S"), "| Hora UTC:", utc_time.strftime("%Y-%m-%d %H:%M:%S"))
+			print("Hora local:", reloj_local.strftime("%Y-%m-%d %H:%M:%S"), "| Hora UTC:", utc_time.strftime("%Y-%m-%d %H:%M:%S"))
+			if reloj_local < utc_time:
+				print("SOLO SETEARÁ HORA!")
+				print("SOLO SETEARÁ HORA!")
+				print("SOLO SETEARÁ HORA!")
+				print("SOLO SETEARÁ HORA!")
+				print("SOLO SETEARÁ HORA!")
+				if utc_time.microsecond/1000 > 0.7:
+					suma = 1
+				else:
+					suma = 0
 				relojes[0].hora = utc_time.hour
 				relojes[0].mins = utc_time.minute
-				relojes[0].segs = utc_time.second
+				relojes[0].segs = utc_time.second+suma
 				relojes[0].ritmo = 1
 				print("Ritmo final:", relojes[0].ritmo)
-				hilo.join()
-			
-		time.sleep(1)
-	
-	
+				#hiloTime.join()
+			else:
+				print("Va a ralentizar")
+				print("Va a ralentizar")
+				print("Va a ralentizar")
+				print("Va a ralentizar")
+				print("Va a ralentizar")
+				relojes[0].ritmo += 5
+		time.sleep(10)
 
 
 @app.route("/time/prueba-timing-time", methods=['POST'])
@@ -240,8 +272,10 @@ if __name__ == "__main__":
 	database = env['database']
 	#startClock()
 
-	now = datetime.datetime.now()
-	h = Reloj("Maestro", hora=now.hour, mins=now.minute, segs=now.second)
+	#now = datetime.datetime.now()
+	#h = Reloj("Maestro", hora=now.hour, mins=now.minute, segs=now.second)
+	h = Reloj("Maestro")
+	
 	relojes.append(h)
 	print("Inició hilo:",hilo)
 	relojes[0].start()
@@ -251,8 +285,15 @@ if __name__ == "__main__":
 		resultados[a] = {'idJugador': a, 'suma':'-'}
 
 	
+	now = datetime.datetime.now()
 	
-	
+	reloj_local = datetime.datetime(
+		now.year,now.month, now.day,
+		#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
+		relojes[0].hora, relojes[0].mins, relojes[0].segs
+	)
+	hiloTiempo = threading.Thread(target=verificaHoraServerTime, name="Estabiliza tiempo")
+	hiloTiempo.start()
 	print("Inició coordinador")
 	from coordinador import allowed_file, leeArchivoTxt, guardaEnBd, connectToBd,sendResultToOtherServer
 	app.run(port=puertoServer, debug=True, host='0.0.0.0')
