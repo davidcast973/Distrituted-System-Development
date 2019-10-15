@@ -80,7 +80,7 @@ def editaReloj(idReloj,hora, mins):#, segs):
 @app.route("/numeros/pausa/<int:idReloj>/<opcion>")
 def pausaReloj(idReloj, opcion):
 	if opcion == "pausa":
-		relojes[idReloj].paused = True
+		relojes[idReloj].paused = False
 	else:
 		relojes[idReloj].paused = False
 	return jsonify({'ok':True, 'description':{'reloj':idReloj, 'pausado':relojes[idReloj].paused}})
@@ -172,7 +172,7 @@ def obtieneTiempoUTC():
 		"hora_server" : reloj_local.timestamp()
 	}
 
-	r = requests.post("http://localhost:100/time/get-current-time/", json=tiempo)
+	r = requests.post("http://10.100.70.115/time/get-current-time/", json=tiempo)
 
 	json_resp = json.loads(r.text)
 
@@ -202,9 +202,20 @@ def obtieneTiempoUTC():
 	
 	return flask.redirect("/", 302)
 
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
 def verificaHoraServerTime():
-	host_name = socket.gethostname() 
-	host_ip = socket.gethostbyname(host_name)
+	host_ip = get_ip()
 	#print("Socket name info:",host_ip)
 
 	while True:
@@ -219,7 +230,7 @@ def verificaHoraServerTime():
 			"hora_server" : reloj_local.timestamp()
 		}
 		print("Estoy pidiendo la nueva hora...")
-		r = requests.post("http://localhost:100/time/get-current-time/", json=detalles_servidor)
+		r = requests.post("http://10.100.70.115/time/get-current-time/", json=detalles_servidor)
 		try:
 			json_resp = json.loads(r.text)
 		except:
@@ -239,13 +250,14 @@ def verificaHoraServerTime():
 				print("SOLO SETEARÁ HORA!")
 				print("SOLO SETEARÁ HORA!")
 				print("SOLO SETEARÁ HORA!")
-				if utc_time.microsecond/1000 > 0.7:
-					suma = 1
-				else:
-					suma = 0
+				#if utc_time.microsecond/1000 > 0.7:
+				#	suma = 1
+				#else:
+				#	suma = 0
+				
 				relojes[0].hora = utc_time.hour
 				relojes[0].mins = utc_time.minute
-				relojes[0].segs = utc_time.second+suma
+				relojes[0].segs = utc_time.second
 				relojes[0].ritmo = 1
 				print("Ritmo final:", relojes[0].ritmo)
 				#hiloTime.join()

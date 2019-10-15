@@ -87,11 +87,11 @@ $(function(){
           .then(name => {
             if (!name) throw null;
             tiempo=name.split(":");
-            console.log(`/numeros/edit/${0}/${tiempo[0]-1}/${tiempo[1]-1}`);
+            console.log(`/numeros/edit/${0}/${tiempo[0]}/${tiempo[1]}`);
             $.ajax({
                 type: "POST",
                 async: false,
-                url: `/numeros/edit/${0}/${tiempo[0]-1}/${tiempo[1]-1}`,
+                url: `/numeros/edit/${0}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })

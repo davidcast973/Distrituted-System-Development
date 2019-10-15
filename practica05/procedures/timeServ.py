@@ -6,9 +6,20 @@ import time
 sys.path.append("./libs")
 from sqlBd import Bd
 
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
 def guardaDatosHoraEnBd(reloj, ipServer, offset, horaServer, latencia):
-	host_name = socket.gethostname() 
-	host_ip = socket.gethostbyname(host_name)
+	host_ip = get_ip()
 	now = datetime.datetime.now()
 	#hora = -1
 	#mins = -1
@@ -53,7 +64,9 @@ def guardaDatosHoraEnBd(reloj, ipServer, offset, horaServer, latencia):
 
 	lastId = bd.doQuery("SELECT * from hora_central ORDER BY id DESC LIMIT 1;", returnAsDict=True)[0]['id']
 
-	idServer = bd.doQuery("SELECT id FROM servidores WHERE ip = '{}' LIMIT 1;".format(ipServer), returnAsDict=True)[0]['id']
+	queryArmada = "SELECT id FROM servidores WHERE ip = '{}' LIMIT 1;".format(ipServer)
+	#print("Query armada para obtener ip:",queryArmada)
+	idServer = bd.doQuery(queryArmada, returnAsDict=True)[0]['id']
 
 	#print("LastId y IdServer:", lastId,",", idServer)
 

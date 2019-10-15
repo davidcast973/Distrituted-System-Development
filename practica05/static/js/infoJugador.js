@@ -61,11 +61,11 @@ $(function(){
           .then(name => {
             if (!name) throw null;
             tiempo=name.split(":");
-            console.log(`/relojes/edit/${0}/${tiempo[0]-1}/${tiempo[1]-1}`);
+            console.log(`/relojes/edit/${0}/${tiempo[0]}/${tiempo[1]}`);
             $.ajax({
                 type: "POST",
                 async: false,
-                url: `/relojes/edit/${0}/${tiempo[0]-1}/${tiempo[1]-1}`,
+                url: `/relojes/edit/${0}/${tiempo[0]}/${tiempo[1]}`,
                 //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
                 contentType:'application/json;charset=UTF-8',    
             })

@@ -43,6 +43,13 @@ def main():
 	#En esta vista se reflejarán los envíos de cada servidor jugador (3 srvrs jugadores)
 	return render_template("server_time.html")
 
+@app.route("/numeros/pausa/<int:idReloj>/<opcion>")
+def pausaReloj(idReloj, opcion):
+	if opcion == "pausa":
+		relojes[idReloj].paused = False
+	else:
+		relojes[idReloj].paused = False
+	return jsonify({'ok':True, 'description':{'reloj':idReloj, 'pausado':relojes[idReloj].paused}})
 
 @app.route("/time/get-current-time/", methods=['POST', 'GET'])
 def obtieneTiempoUTC():
