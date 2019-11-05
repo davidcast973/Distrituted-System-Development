@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<title>Práctica #2.1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
+<script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="{{url_for('static', filename='./js/infoJugador.js')}}"></script>
+<head>
+</head>
+
+
+<body style="background-image: url({{ url_for('static', filename='img/background1.png') }})">
+
+<div class="w3-container">
+  <h2>Práctica 3 - Segundo periodo</h2>
+
+  <div class="w3-card-4 w3-display-middle" style="width:50%;">
+    <header class="w3-container w3-blue w3-center">
+        <h1>Servidor Jugador {{server}}</h1>
+    </header>
+    <!--img src="img_snowtops.jpg" alt="Alps" style="width:100%"-->
+    <div class="w3-container w3-white">
+        <div class="w3-row">
+        
+            <div class="w3-col s12 w3-center">
+                <h3 id="reloj1"></h3>
+            </div>
+            <div class="w3-col s2 w3-button w3-center" id="edit1">
+                <h4><i class="material-icons">edit</i>
+                <br/>Editar</h4>
+            </div>
+            <div class="w3-col s2 w3-button w3-center" id="add1" onclick="add1()">
+                <h4><i class="material-icons">fast_forward</i>
+                <br/>Faster</h4>
+            </div>
+            <div class="w3-col s2 w3-button w3-center" id="subs1" onclick="sub1()">
+                <h4><i class="material-icons">fast_rewind</i>
+                <br/>Slower</h4>
+            </div>
+            <form method="POST" action="/numeros/send-numbers" enctype="multipart/form-data">
+                <div class="w3-col s3 w3-button w3-center" id="loadFile">
+                    <label for="fileChooser">
+                        <h4><i class="material-icons">add_circle_outline</i><br/>Load file</h4>
+                    </label>
+                    <input type="file" name="archivo" id="fileChooser" style="display: none" accept=".txt"/>
+                    
+                </div>
+                <div class="w3-col s3 w3-button w3-center" id="sendFile">
+                    <label for="sendButton">
+                        <h4><i class="material-icons">send</i>
+                        <br/>Enviar</h4>
+                    </label>
+                    <input type="submit" id="sendButton" style="display: none"/>
+                </div>
+            </form>
+
+        </div>     
+    </div>
+
+  </div>
+
+ 
+
+</div>
+
+</body>
+</html>
+
+
+
