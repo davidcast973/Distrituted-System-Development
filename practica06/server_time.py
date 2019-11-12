@@ -29,7 +29,7 @@ relojes = []
 date_time_str = '2019-10-13 15:00:27'
 date_time_obj = datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
 
-#Esta ruta predeterminada lo redirije a /numeros
+#Esta ruta predeterminada lo redirije a /time
 @app.route("/")
 def goToMain():
 	#Regresa un json dummy de relojes desplegados
@@ -37,10 +37,10 @@ def goToMain():
 	
 	return flask.redirect("/time", code=302)
 
-#Es la ruta de la vista del coordinador
+#Es la ruta de la vista del servidor de tiempo
 @app.route("/time")
 def main():
-	#En esta vista se reflejarán los envíos de cada servidor jugador (3 srvrs jugadores)
+	#En esta vista se verá reflejada la hora del servidor de tiempo
 	return render_template("server_time.html")
 
 @app.route("/numeros/pausa/<int:idReloj>/<opcion>")
@@ -117,8 +117,6 @@ def obtenUTCTime():
 		  relojes[0].hora = relojUtc.hour
 		  relojes[0].mins = relojUtc.minute
 		  relojes[0].segs = relojUtc.second + suma + int(response_utc_time.offset)
-
-
 		  time.sleep(30)
 
 #Retorna un json 

@@ -15,7 +15,8 @@
             "user": "root",
             "password": "12345"
         },
-        "send_to" : "10.100.69.207:80"       
+        "send_to" : "10.100.69.207:80",
+        "time_priority" : 1
     },
     "server_2":{
         "numero" : 2,
@@ -26,7 +27,8 @@
             "user": "root",
             "password": "12345"
         },
-        "send_to" : "10.100.74.49:80"       
+        "send_to" : "10.100.74.49:80",
+        "time_priority" : 2
     },
     "server_clock_1":{
         "numero" : 1,
@@ -37,6 +39,7 @@
             "user": "root",
             "password": "12345"
         },
-        "send_to" : "10.100.69.207:80"       
+        "send_to" : "10.100.69.207:80",
+        "time_priority" : 100
     }
 }

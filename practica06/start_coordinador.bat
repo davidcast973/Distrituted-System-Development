@@ -1,0 +1,1 @@
+start cmd /k python server_coordinador.py 1
