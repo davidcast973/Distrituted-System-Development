@@ -20,12 +20,17 @@ from Reloj import Reloj
 from timeServ import *
 from coordinador import *
 
-
-
 UPLOAD_FOLDER = './static/uploads/coordinador'
 numeroServidor = int(sys.argv[1])
 #env = json.loads(open("./config/settings.json", "r").read())['server_clock_'+str(numeroServidor)]
-env = json.loads(open("./config/settings.json", "r").read())['server_'+str(numeroServidor)]
+envGral = json.loads(open("./config/settings.json", "r").read())
+env = envGral['server_'+str(numeroServidor)]
+
+MI_PRIORIDAD = env['priority']
+
+prioridad_equipos = []
+
+INTENTOS_MAX_GET_HORA = 2
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -36,6 +41,7 @@ hilo = 1
 relojes = []
 resultados = [None]*3
 finalizo = [None]
+intentos_get_hora = 0
 
 caracter="sumas"
 
@@ -63,7 +69,7 @@ def obtenUTCTime():
 
 		  relojUtc = datetime.datetime.now()
 
-		  if relojUtc.microsecond/1000 > 0.5:
+		  if relojUtc.microsecond/1000 > 0.7:
 			  suma = 1
 		  else:
 			  suma = 0
@@ -94,6 +100,7 @@ def get_ip():
 	 return IP
 
 def verificaHoraServerTime():
+	global intentos_get_hora
 	host_ip = get_ip()
 	#print("Socket name info:",host_ip)
 
@@ -113,7 +120,11 @@ def verificaHoraServerTime():
 		try:
 			json_resp = json.loads(r.text)
 		except:
-			continue
+			intentos_get_hora +=1
+			if intentos_get_hora >= INTENTOS_MAX_GET_HORA:
+				#INICIA PROCESO DE ELECCION
+				my_ip = get_ip()
+				iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_ip, MI_PRIORIDAD)
 		if json_resp['ok'] == True:
 			tiempo = json_resp['description']['UTC-time']+json_resp['description']['ajuste']
 			utc_time = datetime.datetime.fromtimestamp( tiempo )
@@ -432,6 +443,14 @@ FIN RUTAS Y HANDLERS
 if __name__ == "__main__":
 	global database	
 
+	for equipo in envGral:
+		if 'server' in equipo:
+			ip_server = envGral[equipo]['location']+':'+str(envGral[equipo]['puerto'])
+			prioridad = envGral[equipo]['priority']
+
+			prior_equipo = { 'direccion': ip_server, 'prioridad': prioridad }
+			prioridad_equipos.append( prior_equipo )
+
 	puertoServer = env['puerto']
 	database = env['database']
 
@@ -458,5 +477,6 @@ if __name__ == "__main__":
 	hiloTiempo = threading.Thread(target=verificaHoraServerTime, name="Estabiliza tiempo")
 	hiloTiempo.start()
 	print("Inició coordinador")
+
 	from coordinador import allowed_file, leeArchivoTxt, guardaEnBd, connectToBd,sendResultToOtherServer
 	app.run(port=puertoServer, debug=True, host='0.0.0.0')

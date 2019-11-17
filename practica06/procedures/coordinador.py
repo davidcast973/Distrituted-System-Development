@@ -6,6 +6,7 @@ import json
 import pymysql
 import time
 import socket
+import threading
 
 
 sys.path.append("./libs")
@@ -15,6 +16,33 @@ import server_coordinador
 
 ALLOWED_EXTENSIONS = {'txt'}
 
+respuestas = []
+
+def avisa_soy_nuevo_coordinador( equipo ):
+	r = requests.post( equipo['direccion'] )
+	pass
+
+
+def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPriority):
+	global respuestas
+	respuestas = [None]*len(prioridadEquipos)
+	for equipo in prioridadEquipos:
+		if equipo['direccion'] == myIP:
+			continue
+		if equipo['prioridadEquipos']>myPriority:
+			h = threading.Thread(target=avisa_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(equipo,) ) 
+			h.start()
+			h.join()
+		
+	if 'No' in respuestas:
+		return False
+	else:
+		for equipo in prioridadEquipos:
+			if equipo['direccion'] == myIP:
+				continue
+		if equipo['prioridadEquipos']>myPriority:
+			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(equipo,) ) 
+			h.start()
 
 def allowed_file(filename):
 	return '.' in filename and \
