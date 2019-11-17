@@ -432,6 +432,34 @@ Fin servidor tiempo
 '''
 
 '''
+Eleccion de nuevo coordinador:
+'''
+
+@app.route("/coordinacion/nuevo-coordinador", methods=['POST'])
+def valida_merecimiento():
+	data = request.json
+	if data['priority'] < MI_PRIORIDAD:
+		my_ip = get_ip()
+		h = threading.Thread(target=iniciaEleccionNuevoCoordinador, name="Inicia nueva eleccion", args=(data['tipo_servidor'] , prioridad_equipos, my_ip, MI_PRIORIDAD,) )
+		h.start()
+		return jsonify(ok=True, description={'accepted':False})
+	else:
+		#FALTA Switch para ahora pedir el tiempo al nuevo servidor
+		return jsonify(ok=True, description={'accepted':True})
+
+@app.route("/coordinacion/confirma-coordinador", methods=['POST'])
+def valida_merecimiento():
+	data = request.json
+	if data['priority'] < MI_PRIORIDAD:
+		my_ip = get_ip()
+		h = threading.Thread(target=iniciaEleccionNuevoCoordinador, name="Inicia nueva eleccion", args=(data['tipo_servidor'] , prioridad_equipos, my_ip, MI_PRIORIDAD,) )
+		h.start()
+		return jsonify(ok=True, description={'accepted':False})
+	else:
+		#FALTA Switch para ahora pedir el tiempo al nuevo servidor
+		return jsonify(ok=True, description={'accepted':True})
+
+'''
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------
 FIN RUTAS Y HANDLERS

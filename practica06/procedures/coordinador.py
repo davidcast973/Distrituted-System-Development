@@ -18,30 +18,60 @@ ALLOWED_EXTENSIONS = {'txt'}
 
 respuestas = []
 
-def avisa_soy_nuevo_coordinador( equipo ):
-	r = requests.post( equipo['direccion'] )
-	pass
+def avisa_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP, myPriority, location_array):
+	global respuestas
+	url_avisa_coord = "/coordinacion/nuevo-coordinador"
+	datos = {
+		'nuevo_coordinador' : myIP,
+		'tipo_servidor': tipoServer,
+		'prioridad' : myPriority
 
+	}
+	r = requests.post( equipo_destino['direccion'] + url_avisa_coord, json=datos)
+	if r.status_code == 200:
+		response = json.loads( r.text )
+		respuestas[ location_array ] = response['description']['accepted']
+
+def confirma_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP):
+	global respuestas
+	url_confirma_coord = "/coordinacion/confirma-coordinador"
+	datos = {
+		'nuevo_coordinador' : myIP,
+		'tipo_servidor': tipoServer
+	}
+	r = requests.post( equipo_destino['direccion'] + url_confirma_coord, json=datos)
+	if r.status_code == 200:
+		response = json.loads( r.text )
+		print("Respuesta confirmación de coordinador:", response)
+	#	respuestas[ location_array ] = response['description']['accepted']
+	#pass
 
 def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPriority):
 	global respuestas
 	respuestas = [None]*len(prioridadEquipos)
+	a = 0
 	for equipo in prioridadEquipos:
+		a+=1
 		if equipo['direccion'] == myIP:
 			continue
 		if equipo['prioridadEquipos']>myPriority:
-			h = threading.Thread(target=avisa_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(equipo,) ) 
+			h = threading.Thread(target=avisa_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo,myIP,myPriority,a) ) 
 			h.start()
-			h.join()
+	try:	
+		h.join()
+	except Exception as ex:
+		#print(ex)
+		pass
 		
-	if 'No' in respuestas:
+	print("Valor de las respuestas de los dema´s para Bully:",respuestas)
+	if False in respuestas:
 		return False
 	else:
 		for equipo in prioridadEquipos:
 			if equipo['direccion'] == myIP:
 				continue
 		if equipo['prioridadEquipos']>myPriority:
-			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(equipo,) ) 
+			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo, myIP) ) 
 			h.start()
 
 def allowed_file(filename):
