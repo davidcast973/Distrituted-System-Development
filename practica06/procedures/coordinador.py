@@ -65,6 +65,14 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 	a = 0
 	for equipo in prioridadEquipos:
 		if equipo['direccion'] == myIP:
+			print("Estoy haciendo skip para avisar :", equipo)
+			print("Estoy haciendo skip para avisar :", equipo)
+			print("Estoy haciendo skip para avisar :", equipo)
+			print("Estoy haciendo skip para avisar :", equipo)
+			print("Estoy haciendo skip para avisar :", equipo)
+			print("Estoy haciendo skip para avisar :", equipo)
+			print("Estoy haciendo skip para avisar :", equipo)
+			print("Estoy haciendo skip para avisar :", equipo)
 			continue
 		if equipo['prioridad']>myPriority:
 			#print("Le voy a avisar a {}, que quiero ser el coordinador".format(equipo))
@@ -82,10 +90,18 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 		for equipo in prioridadEquipos:
 			#print("Le estoy confirmando a {}, que seré el coordinador".format(equipo))
 			if equipo['direccion'] == myIP:
+				print("Estoy haciendo skip de mi dirección:", equipo)
+				print("Estoy haciendo skip de mi dirección:", equipo)
+				print("Estoy haciendo skip de mi dirección:", equipo)
+				print("Estoy haciendo skip de mi dirección:", equipo)
+				print("Estoy haciendo skip de mi dirección:", equipo)
+				print("Estoy haciendo skip de mi dirección:", equipo)
+				print("Estoy haciendo skip de mi dirección:", equipo)
 				continue
 			#Le avisa a todo mundo que él es el nuevo coordinador
 			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo, myIP) ) 
 			h.start()
+			h.join()
 		return True
 
 def allowed_file(filename):

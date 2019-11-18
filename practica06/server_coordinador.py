@@ -123,6 +123,14 @@ def verificaHoraServerTime():
 	#print("Socket name info:",host_ip)
 
 	while True:
+		print("Está en hilo de verificaHoraServerTime")
+		print("Está en hilo de verificaHoraServerTime")
+		print("Está en hilo de verificaHoraServerTime")
+		print("Está en hilo de verificaHoraServerTime")
+		print("Está en hilo de verificaHoraServerTime")
+		print("Está en hilo de verificaHoraServerTime")
+		print("Está en hilo de verificaHoraServerTime")
+		print("Está en hilo de verificaHoraServerTime")
 		now = datetime.datetime.now()
 		reloj_local = datetime.datetime(
 			now.year,now.month, now.day,
@@ -156,7 +164,7 @@ def verificaHoraServerTime():
 				if a == True:
 					hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
 					hiloUtc.start()
-					caracter ='server_tiempo'
+					caracter ='tiempo'
 					try:
 						hiloTiempo.join()
 					except Exception as ex:
@@ -170,6 +178,7 @@ def verificaHoraServerTime():
 					except Exception as ex:
 						#print(ex)
 						pass
+
 			time.sleep(10)
 
 			continue
@@ -528,6 +537,8 @@ def confirma_nuevo_coordinador():
 	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
 	if data['tipo_servidor'] == 'tiempo':
 		address_direccion_server_tiempo = data['nuevo_coordinador']
+		print("La nueva dirección del servidor de tiempo:\n", address_direccion_server_tiempo)
+		print("--------------------------------------------------------------------------------------")
 		caracter = "tiempo"
 		if numeroServidor == 1:
 			address_to_forward = envGral['server_2']['location']+":"+str(envGral['server_2']['puerto'])
@@ -573,7 +584,7 @@ if __name__ == "__main__":
 	relojes.append( Reloj("Coordinador_"+str(numeroServidor)+"_"+str(hilo)) )
 	print("Relojes:", relojes)
 
-	relojes[0].printable = True
+	#relojes[0].printable = True
 	relojes[0].start()
 	print("Inició hilo:",relojes[0])
 
