@@ -13,14 +13,16 @@ import sys
 import socket
 import ntplib
 
-sys.path.append("./classes")
-sys.path.append("./procedures")
+sys.path.append("./../")
+
 #Includes de práctica:
-from Reloj import Reloj
-from timeServ import *
-from coordinador import *
+from practica06.classes.Reloj import Reloj
+from practica06.procedures.timeServ import *
+from practica06.procedures.coordinador import *
 
 UPLOAD_FOLDER = './static/uploads/coordinador'
+INTENTOS_MAX_GET_HORA = 2
+
 numeroServidor = int(sys.argv[1])
 #env = json.loads(open("./config/settings.json", "r").read())['server_clock_'+str(numeroServidor)]
 envGral = json.loads(open("./config/settings.json", "r").read())
@@ -28,20 +30,22 @@ env = envGral['server_'+str(numeroServidor)]
 
 MI_PRIORIDAD = env['priority']
 
-prioridad_equipos = []
-
-INTENTOS_MAX_GET_HORA = 2
-
+#Configuración FLASK
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-PRIORIDAD = env['time_priority']
+PRIORIDAD = env['priority']
 
-
+#Variables "globales"
 hilo = 1
 relojes = []
 resultados = [None]*3
 finalizo = [None]
+prioridad_equipos = []
 intentos_get_hora = 0
+address_direccion_server_tiempo = envGral['server_clock_1']['location']+":"+str(envGral['server_clock_1']['puerto'])
+address_to_forward = ""
+
+#hiloTiempo = ""
 
 caracter="sumas"
 
@@ -53,54 +57,68 @@ FUNCIONES:
 ----------------------------------------------------------------
 '''
 
-
 '''
 ---------------------------------
 Funciones server tiempo
 '''
 
 def obtenUTCTime():
-	 while True:
-		  c = ntplib.NTPClient()
-		  # Provide the respective ntp server ip in below function
-		  
-		  #Parece ser que está bloqueado en la red de ESCOM
-		  #response_utc_time = c.request('uk.pool.ntp.org', version=3)
+	global relojes
+	t = threading.currentThread()
+	while getattr(t, "do_run", True):
+		#c = ntplib.NTPClient()
+		# Provide the respective ntp server ip in below function
 
-		  relojUtc = datetime.datetime.now()
+		#Parece ser que está bloqueado en la red de ESCOM
+		#response_utc_time = c.request('uk.pool.ntp.org', version=3)
 
-		  if relojUtc.microsecond/1000 > 0.7:
-			  suma = 1
-		  else:
-			  suma = 0
+		relojUtc = datetime.datetime.now()
 
-		  relojes[0].hora = relojUtc.hour
-		  relojes[0].mins = relojUtc.minute
-		  relojes[0].segs = relojUtc.second + suma
+		if relojUtc.microsecond/1000 > 0.7:
+			suma = 1
+		else:
+			suma = 0
+
+		relojes[0].hora = relojUtc.hour
+		relojes[0].mins = relojUtc.minute
+		relojes[0].segs = relojUtc.second + suma
 
 
-		  time.sleep(30)
+		time.sleep(30)
+
+'''
+------------------------------------------
+'''
 
 #-------------------------------------------------------------------------
 '''
 -------------------------------
 Funciones server coordinador sumas
 '''
+def forward_to_sum_server(full_path):
+	return flask.redirect("http://{}/{}".format(address_to_forward, full_path), code=307)
 
-def get_ip():
-	 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	 try:
-		  # doesn't even have to be reachable
-		  s.connect(('10.255.255.255', 1))
-		  IP = s.getsockname()[0]
-	 except:
-		  IP = '127.0.0.1'
-	 finally:
-		  s.close()
-	 return IP
+def am_i_a_sum_server():
+	if caracter == 'sumas':
+		return True
+	return False
+
+def get_ip(getPort = False):
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	try:
+		# doesn't even have to be reachable
+		s.connect(('10.255.255.255', 1))
+		IP = s.getsockname()[0]
+	except:
+		IP = '127.0.0.1'
+	finally:
+		s.close()
+	if getPort == True:
+		return {'ip':IP, 'port':env['puerto']}
+	return IP
 
 def verificaHoraServerTime():
-	global intentos_get_hora
+	global intentos_get_hora, caracter, hiloTiempo
 	host_ip = get_ip()
 	#print("Socket name info:",host_ip)
 
@@ -115,25 +133,52 @@ def verificaHoraServerTime():
 			"ip_server" : host_ip,
 			"hora_server" : reloj_local.timestamp()
 		}
-		print("Estoy pidiendo la nueva hora...")
-		r = requests.post("http://10.100.70.115/time/get-current-time/", json=detalles_servidor)
+		
+		aux = ""
 		try:
+			print("Estoy pidiendo la nueva hora a:", address_direccion_server_tiempo)
+			r = requests.post("http://{}/time/get-current-time/".format(address_direccion_server_tiempo), json=detalles_servidor)
+			aux = r
 			json_resp = json.loads(r.text)
 		except:
+			print("Entré en excepción porque r=",aux)
+			print("Entré en excepción porque r=",aux)
+			print("Entré en excepción porque r=",aux)
+			print("Entré en excepción porque r=",aux)
+			print("Entré en excepción porque r=",aux)
+
 			intentos_get_hora +=1
-			if intentos_get_hora >= INTENTOS_MAX_GET_HORA:
+			if intentos_get_hora >= INTENTOS_MAX_GET_HORA and caracter == 'sumas':
 				#INICIA PROCESO DE ELECCION
-				my_ip = get_ip()
-				iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_ip, MI_PRIORIDAD)
+				my_ip = get_ip(getPort=True)
+				my_address = my_ip['ip']+":"+str(my_ip['port'])
+				a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
+				if a == True:
+					hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
+					hiloUtc.start()
+					caracter ='server_tiempo'
+					try:
+						hiloTiempo.join()
+					except Exception as ex:
+						pass
+					print("Trataré de romper el hilo")
+					return True
+				else:
+					try:
+						hiloUtc.do_run = False
+						hiloUtc.join()
+					except Exception as ex:
+						#print(ex)
+						pass
+			time.sleep(10)
+
+			continue
 		if json_resp['ok'] == True:
 			tiempo = json_resp['description']['UTC-time']+json_resp['description']['ajuste']
 			utc_time = datetime.datetime.fromtimestamp( tiempo )
 
-			#print("Hora UTC:", utc_time)
-			#print("Hora Hilo:", horaLocal)
-			print("Hora local:", reloj_local.strftime("%Y-%m-%d %H:%M:%S"), "| Hora UTC:", utc_time.strftime("%Y-%m-%d %H:%M:%S"))
-			print("Hora local:", reloj_local.strftime("%Y-%m-%d %H:%M:%S"), "| Hora UTC:", utc_time.strftime("%Y-%m-%d %H:%M:%S"))
-			print("Hora local:", reloj_local.strftime("%Y-%m-%d %H:%M:%S"), "| Hora UTC:", utc_time.strftime("%Y-%m-%d %H:%M:%S"))
+			#print("Hora local:", reloj_local.strftime("%Y-%m-%d %H:%M:%S"), "| Hora UTC:", utc_time.strftime("%Y-%m-%d %H:%M:%S"))
+
 			if reloj_local < utc_time:
 				print("SOLO SETEARÁ HORA!")
 				print("SOLO SETEARÁ HORA!")
@@ -191,8 +236,10 @@ Funciones server coordinador sumas
 def goToMain():
 	#Regresa un json dummy de relojes desplegados
 	#return jsonify({'ok':True, 'description':'Deployed'})
-	
-	return flask.redirect("/coordinador", code=302)
+	if am_i_a_sum_server() == True:
+		return flask.redirect("/coordinador", code=302)
+	else:
+		return flask.redirect("/time", code=302)
 
 #Es la ruta de la vista del coordinador
 @app.route("/coordinador")
@@ -241,6 +288,8 @@ def pausaReloj(idReloj, opcion):
 
 @app.route("/numeros/<int:idReloj>/<opcion>")
 def cambiaRitmo(idReloj, opcion):
+	if am_i_a_sum_server() == False:
+		return jsonify(ok=True, description='Disabled function')
 	response = {'ok':False, 'description':""}
 	try:
 		if opcion=="A":
@@ -258,6 +307,8 @@ def cambiaRitmo(idReloj, opcion):
 #Esta ruta/función, será la que recibirá los archivos de los jugadores
 @app.route("/numeros/save-sum-numbers", methods=['POST'])
 def saveSumNumbers():
+	if am_i_a_sum_server() == False:
+		return forward_to_sum_server(request.full_path)
 	response = {'ok':False, 'description':"Check on the console :D"}
 	formReq = request.form
 	numeroServer = formReq.get('servidor',-1)
@@ -289,6 +340,9 @@ def saveSumNumbers():
 
 @app.route("/numeros/save-result-peer", methods=["POST"])
 def guardaResultadoOtroServidor():
+	if am_i_a_sum_server() == False:
+		return forward_to_sum_server(request.full_path)
+
 	datos = request.json
 	
 	ip_origen = datos['ip_origin']
@@ -302,59 +356,65 @@ def guardaResultadoOtroServidor():
 
 @app.route("/numeros/getResultOf/<int:idJugador>", methods=['GET'])
 def exponeSumaDeJugador(idJugador):
+	if am_i_a_sum_server() == False:
+		return forward_to_sum_server(request.full_path)
+
 	if idJugador in [0,1,2]:
 		return jsonify(ok=True, description=resultados[idJugador])
 	else:
 		return jsonify(ok=False, description="Jugador Inexistente")
 
-@app.route("/numeros/getUtcTime", methods=['GET'])
-def obtieneTiempoUTC():
-	global finalizo, relojes, hiloTime
-	host_name = socket.gethostname() 
-	host_ip = socket.gethostbyname(host_name)
-	print("Socket name info:",host_ip)
-	now = datetime.datetime.now()
+# @app.route("/numeros/getUtcTime", methods=['GET'])
+# def obtieneTiempoUTC():
+# 	if am_i_a_sum_server() == False:
+# 		return forward_to_sum_server(request.full_path)
+
+# 	global finalizo, relojes, hiloTime
+# 	host_name = socket.gethostname() 
+# 	host_ip = socket.gethostbyname(host_name)
+# 	print("Socket name info:",host_ip)
+# 	now = datetime.datetime.now()
 	
-	reloj_local = datetime.datetime(
-		now.year,now.month, now.day,
-		#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
-		relojes[0].hora, relojes[0].mins, relojes[0].segs
-	)
+# 	reloj_local = datetime.datetime(
+# 		now.year,now.month, now.day,
+# 		#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
+# 		relojes[0].hora, relojes[0].mins, relojes[0].segs
+# 	)
 
-	tiempo = {
-		"ip_server" : host_ip,
-		"hora_server" : reloj_local.timestamp()
-	}
+# 	tiempo = {
+# 		"ip_server" : host_ip,
+# 		"hora_server" : reloj_local.timestamp()
+# 	}
 
-	r = requests.post("http://10.100.70.115/time/get-current-time/", json=tiempo)
+# 	r = requests.post("http://10.100.70.115/time/get-current-time/", json=tiempo)
 
-	json_resp = json.loads(r.text)
+# 	json_resp = json.loads(r.text)
 
-	if json_resp['ok'] == True:
-		tiempo = json_resp['description']['UTC-time']+json_resp['description']['ajuste']
-		#utc_time = datetime.datetime.fromtimestamp( tiempo, datetime.timezone.utc)
-		utc_time = datetime.datetime.fromtimestamp( tiempo )
-		reloj_local = datetime.datetime(
-			now.year,now.month, now.day,
-			#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
-			relojes[0].hora, relojes[0].mins, relojes[0].segs
-		)
-		print("Hora UTC:", utc_time)
-		print("Hora Hilo:", reloj_local)
-		if utc_time >= reloj_local:
-			print("UTC es mayor")
-			relojes[0].hora = utc_time.hour
-			relojes[0].mins = utc_time.minute
-			relojes[0].segs = utc_time.second
-			relojes[0].ritmo = 1
-		else:
-			print("Local es mayor")
-			dif = utc_time-reloj_local
-			relojes[0].ritmo += 5
-			#hiloTime = threading.Thread(target=verificaHoraServerTime, name="Verifica_tiempo", args=(reloj_local,))
-			#hiloTime.start()
+# 	if json_resp['ok'] == True:
+# 		tiempo = json_resp['description']['UTC-time']+json_resp['description']['ajuste']
+# 		#utc_time = datetime.datetime.fromtimestamp( tiempo, datetime.timezone.utc)
+# 		utc_time = datetime.datetime.fromtimestamp( tiempo )
+# 		reloj_local = datetime.datetime(
+# 			now.year,now.month, now.day,
+# 			#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
+# 			relojes[0].hora, relojes[0].mins, relojes[0].segs
+# 		)
+# 		print("Hora UTC:", utc_time)
+# 		print("Hora Hilo:", reloj_local)
+# 		if utc_time >= reloj_local:
+# 			print("UTC es mayor")
+# 			relojes[0].hora = utc_time.hour
+# 			relojes[0].mins = utc_time.minute
+# 			relojes[0].segs = utc_time.second
+# 			relojes[0].ritmo = 1
+# 		else:
+# 			print("Local es mayor")
+# 			dif = utc_time-reloj_local
+# 			relojes[0].ritmo += 5
+# 			#hiloTime = threading.Thread(target=verificaHoraServerTime, name="Verifica_tiempo", args=(reloj_local,))
+# 			#hiloTime.start()
 	
-	return flask.redirect("/", 302)
+# 	return flask.redirect("/", 302)
 
 
 @app.route("/time/prueba-timing-time", methods=['POST'])
@@ -375,12 +435,17 @@ Servidor de tiempo:
 #Es la ruta de la vista del servidor de tiempo
 @app.route("/time")
 def main_time():
+	if am_i_a_sum_server() == True:
+		return jsonify(ok=False, description="I'm not a time server")
+
 	#En esta vista se verá reflejada la hora del servidor de tiempo
 	return render_template("server_time.html")
 
 @app.route("/time/get-current-time/", methods=['POST', 'GET'])
 def sendCurrentTime():
-	global lastConnectToUTCServer
+	if am_i_a_sum_server() == True:
+		return jsonify(ok=False, description="I'm not a time server")
+	#global lastConnectToUTCServer
 	from datetime import timezone
 	solicitud = request.json
 	ipServer = solicitud['ip_server']
@@ -438,7 +503,11 @@ Eleccion de nuevo coordinador:
 @app.route("/coordinacion/nuevo-coordinador", methods=['POST'])
 def valida_merecimiento():
 	data = request.json
-	if data['priority'] < MI_PRIORIDAD:
+	print("Alguien quiere ser coordinador:", data)
+	print("Alguien quiere ser coordinador:", data)
+	print("Alguien quiere ser coordinador:", data)
+
+	if data['prioridad'] < MI_PRIORIDAD:
 		my_ip = get_ip()
 		h = threading.Thread(target=iniciaEleccionNuevoCoordinador, name="Inicia nueva eleccion", args=(data['tipo_servidor'] , prioridad_equipos, my_ip, MI_PRIORIDAD,) )
 		h.start()
@@ -448,16 +517,28 @@ def valida_merecimiento():
 		return jsonify(ok=True, description={'accepted':True})
 
 @app.route("/coordinacion/confirma-coordinador", methods=['POST'])
-def valida_merecimiento():
+def confirma_nuevo_coordinador():
+	global address_direccion_server_tiempo, caracter, address_to_forward
 	data = request.json
-	if data['priority'] < MI_PRIORIDAD:
-		my_ip = get_ip()
-		h = threading.Thread(target=iniciaEleccionNuevoCoordinador, name="Inicia nueva eleccion", args=(data['tipo_servidor'] , prioridad_equipos, my_ip, MI_PRIORIDAD,) )
-		h.start()
-		return jsonify(ok=True, description={'accepted':False})
+	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
+	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
+	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
+	if data['tipo_servidor'] == 'tiempo':
+		address_direccion_server_tiempo = data['nuevo_coordinador']
+		caracter = "tiempo"
+		if numeroServidor == 1:
+			address_to_forward = envGral['server_2']['location']+":"+str(envGral['server_2']['puerto'])
+		else:
+			address_to_forward = envGral['server_1']['location']+":"+str(envGral['server_1']['puerto'])
+
+		return jsonify(ok=True, description={'server_changed':True, 'details':"Changed to {}".format(address_direccion_server_tiempo)})
 	else:
-		#FALTA Switch para ahora pedir el tiempo al nuevo servidor
-		return jsonify(ok=True, description={'accepted':True})
+		return jsonify(ok=False, description={'server_changed':False, 'details':"Servidor inesperado:{}".format(data['tipo_servidor'])})
+	# FALTA Switch para ahora pedir el tiempo al nuevo servidor
+	# elif data['tipo_servidor'] == 'coordinador':
+	# 	Switch para coordinador
+		
+	
 
 '''
 ------------------------------------------------------------------------
@@ -469,7 +550,7 @@ FIN RUTAS Y HANDLERS
 
 
 if __name__ == "__main__":
-	global database	
+	global database, hiloTiempo
 
 	for equipo in envGral:
 		if 'server' in equipo:
@@ -481,30 +562,21 @@ if __name__ == "__main__":
 
 	puertoServer = env['puerto']
 	database = env['database']
-
-	#now = datetime.datetime.now()
-	#h = Reloj("Maestro", hora=now.hour, mins=now.minute, segs=now.second)
-	h = Reloj("Maestro")
-	
-	relojes.append(h)
-	print("Inició hilo:",hilo)
-	relojes[0].start()
-	hilo+=1
 	
 	for a in range(0, len(resultados)):
 		resultados[a] = {'idJugador': a, 'suma':'-'}
 
 	
-	now = datetime.datetime.now()
-	
-	reloj_local = datetime.datetime(
-		now.year,now.month, now.day,
-		#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
-		relojes[0].hora, relojes[0].mins, relojes[0].segs
-	)
+	relojes.append( Reloj("Coordinador_"+str(numeroServidor)+"_"+str(hilo)) )
+	print("Relojes:", relojes)
+
+	relojes[0].printable = True
+	relojes[0].start()
+	print("Inició hilo:",relojes[0])
+
 	hiloTiempo = threading.Thread(target=verificaHoraServerTime, name="Estabiliza tiempo")
 	hiloTiempo.start()
 	print("Inició coordinador")
 
-	from coordinador import allowed_file, leeArchivoTxt, guardaEnBd, connectToBd,sendResultToOtherServer
-	app.run(port=puertoServer, debug=True, host='0.0.0.0')
+	app.run(port=puertoServer, debug=True, host='0.0.0.0', use_reloader=False)
+	

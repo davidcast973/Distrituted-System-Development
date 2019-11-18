@@ -19,6 +19,7 @@ def get_ip():
     return IP
 
 def guardaDatosHoraEnBd(reloj, ipServer, offset, horaServer, latencia):
+	return True
 	host_ip = get_ip()
 	now = datetime.datetime.now()
 	#hora = -1

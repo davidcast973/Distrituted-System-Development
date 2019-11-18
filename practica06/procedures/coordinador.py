@@ -12,25 +12,31 @@ import threading
 sys.path.append("./libs")
 sys.path.append("./../")
 from sqlBd import Bd
-import server_coordinador
 
 ALLOWED_EXTENSIONS = {'txt'}
 
 respuestas = []
 
+hiloUtc = ""
+
 def avisa_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP, myPriority, location_array):
 	global respuestas
+	print("Le estoy avisando a {}, que quiero ser el coordinador".format(equipo_destino))
 	url_avisa_coord = "/coordinacion/nuevo-coordinador"
 	datos = {
 		'nuevo_coordinador' : myIP,
 		'tipo_servidor': tipoServer,
 		'prioridad' : myPriority
-
 	}
-	r = requests.post( equipo_destino['direccion'] + url_avisa_coord, json=datos)
-	if r.status_code == 200:
-		response = json.loads( r.text )
-		respuestas[ location_array ] = response['description']['accepted']
+	try:
+		r = requests.post("http://"+ equipo_destino['direccion'] + url_avisa_coord, json=datos)
+		if r.status_code == 200:
+			response = json.loads( r.text )
+			respuestas[ location_array ] = response['description']['accepted']
+	except Exception as ex:
+		#print(ex)
+		print("No le pude avisar a:", equipo_destino)
+		respuestas[ location_array ] = None
 
 def confirma_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP):
 	global respuestas
@@ -39,40 +45,51 @@ def confirma_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP):
 		'nuevo_coordinador' : myIP,
 		'tipo_servidor': tipoServer
 	}
-	r = requests.post( equipo_destino['direccion'] + url_confirma_coord, json=datos)
-	if r.status_code == 200:
-		response = json.loads( r.text )
-		print("Respuesta confirmación de coordinador:", response)
-	#	respuestas[ location_array ] = response['description']['accepted']
-	#pass
+	try:
+		print("Haré petición de confirmación a:", "http://"+equipo_destino['direccion'] + url_confirma_coord)
+		r = requests.post("http://"+ equipo_destino['direccion'] + url_confirma_coord, json=datos)
+		print("RESPUESTA DE confirmación que soy el coordinador:", r.text, "estatus:", r.status_code)
+		if r.status_code == 200:
+			response = json.loads( r.text )
+			print("Respuesta confirmación de coordinador:", response)
+		#	respuestas[ location_array ] = response['description']['accepted']
+		#pass
+	except Exception as ex:
+		print("No se pudo hacer petición a ", equipo_destino)
+		pass
 
 def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPriority):
-	global respuestas
+	global respuestas, hiloUtc
+	print("Estoy iniciando proceso de elección")
 	respuestas = [None]*len(prioridadEquipos)
 	a = 0
 	for equipo in prioridadEquipos:
-		a+=1
 		if equipo['direccion'] == myIP:
 			continue
-		if equipo['prioridadEquipos']>myPriority:
+		if equipo['prioridad']>myPriority:
+			print("Le voy a avisar a {}, que quiero ser el coordinador".format(equipo))
+			print("Iniciando hilo para avisarles")
 			h = threading.Thread(target=avisa_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo,myIP,myPriority,a) ) 
 			h.start()
+		a+=1
 	try:	
 		h.join()
 	except Exception as ex:
 		#print(ex)
 		pass
 		
-	print("Valor de las respuestas de los dema´s para Bully:",respuestas)
+	print("Valor de las respuestas de los demás para Bully:",respuestas)
 	if False in respuestas:
 		return False
 	else:
 		for equipo in prioridadEquipos:
+			print("Le estoy confirmando a {}, que seré el coordinador".format(equipo))
 			if equipo['direccion'] == myIP:
 				continue
-		if equipo['prioridadEquipos']>myPriority:
+			#Le avisa a todo mundo que él es el nuevo coordinador
 			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo, myIP) ) 
 			h.start()
+		return True
 
 def allowed_file(filename):
 	return '.' in filename and \
@@ -107,19 +124,19 @@ def guardaEnBd(ip_origen, numeroServer, suma, relojObject, nombreEquipo, dbName=
 
 	return resultado
 
-def sendResultToOtherServer(ip_origen, numeroServer, suma, nombreEquipoOrigen):
-	from server_coordinador import env
-	print("Llegó a función de hilo")
-	destino = env['send_to']
-	data_to_send = {
-		'ip_origin' : ip_origen,
-		'num_jugador_origin' : numeroServer,
-		'resultado_suma' : suma,
-		'nombre_equipo_origin' : nombreEquipoOrigen
-	}
-	r = requests.post("http://"+destino+"/numeros/save-result-peer", json=data_to_send)
-	print("Hizo petición de hilo y regresará")
-	return r.text
+# def sendResultToOtherServer(ip_origen, numeroServer, suma, nombreEquipoOrigen):
+# 	from server_coordinador import env
+# 	print("Llegó a función de hilo")
+# 	destino = env['send_to']
+# 	data_to_send = {
+# 		'ip_origin' : ip_origen,
+# 		'num_jugador_origin' : numeroServer,
+# 		'resultado_suma' : suma,
+# 		'nombre_equipo_origin' : nombreEquipoOrigen
+# 	}
+# 	r = requests.post("http://"+destino+"/numeros/save-result-peer", json=data_to_send)
+# 	print("Hizo petición de hilo y regresará")
+# 	return r.text
 
 def connectToBd(dbName=None):
 
