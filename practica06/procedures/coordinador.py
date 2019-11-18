@@ -41,6 +41,7 @@ def avisa_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP, myPriority, lo
 def confirma_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP):
 	global respuestas
 	url_confirma_coord = "/coordinacion/confirma-coordinador"
+	print("Se va a setear al nuevo coordinador ubicado en:", myIP)
 	datos = {
 		'nuevo_coordinador' : myIP,
 		'tipo_servidor': tipoServer
@@ -48,14 +49,13 @@ def confirma_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP):
 	try:
 		print("Haré petición de confirmación a:", "http://"+equipo_destino['direccion'] + url_confirma_coord)
 		r = requests.post("http://"+ equipo_destino['direccion'] + url_confirma_coord, json=datos)
-		print("RESPUESTA DE confirmación que soy el coordinador:", r.text, "estatus:", r.status_code)
+		#print("RESPUESTA DE confirmación que soy el coordinador:", r.text, "estatus:", r.status_code)
 		if r.status_code == 200:
 			response = json.loads( r.text )
-			print("Respuesta confirmación de coordinador:", response)
 		#	respuestas[ location_array ] = response['description']['accepted']
 		#pass
 	except Exception as ex:
-		print("No se pudo hacer petición a ", equipo_destino)
+		print("No se pudo hacer petición de confirmación a ", equipo_destino)
 		pass
 
 def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPriority):
@@ -67,23 +67,20 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 		if equipo['direccion'] == myIP:
 			continue
 		if equipo['prioridad']>myPriority:
-			print("Le voy a avisar a {}, que quiero ser el coordinador".format(equipo))
+			#print("Le voy a avisar a {}, que quiero ser el coordinador".format(equipo))
 			print("Iniciando hilo para avisarles")
 			h = threading.Thread(target=avisa_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo,myIP,myPriority,a) ) 
 			h.start()
+			h.join()
 		a+=1
-	try:	
-		h.join()
-	except Exception as ex:
-		#print(ex)
-		pass
 		
 	print("Valor de las respuestas de los demás para Bully:",respuestas)
+	#input(".-.-.-.-.-.-")
 	if False in respuestas:
 		return False
 	else:
 		for equipo in prioridadEquipos:
-			print("Le estoy confirmando a {}, que seré el coordinador".format(equipo))
+			#print("Le estoy confirmando a {}, que seré el coordinador".format(equipo))
 			if equipo['direccion'] == myIP:
 				continue
 			#Le avisa a todo mundo que él es el nuevo coordinador

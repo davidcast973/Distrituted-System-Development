@@ -520,6 +520,9 @@ def valida_merecimiento():
 def confirma_nuevo_coordinador():
 	global address_direccion_server_tiempo, caracter, address_to_forward
 	data = request.json
+	
+	print("Me hizo la petición el host:\n",request.headers)
+	print("......................................................")
 	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
 	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
 	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
