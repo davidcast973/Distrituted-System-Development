@@ -122,15 +122,11 @@ def verificaHoraServerTime():
 	host_ip = get_ip()
 	#print("Socket name info:",host_ip)
 
-	while True:
+	#while True:
+	hiloTiempo = threading.currentThread()
+	while getattr(hiloTiempo, "do_run", True):
 		print("Está en hilo de verificaHoraServerTime")
-		print("Está en hilo de verificaHoraServerTime")
-		print("Está en hilo de verificaHoraServerTime")
-		print("Está en hilo de verificaHoraServerTime")
-		print("Está en hilo de verificaHoraServerTime")
-		print("Está en hilo de verificaHoraServerTime")
-		print("Está en hilo de verificaHoraServerTime")
-		print("Está en hilo de verificaHoraServerTime")
+
 		now = datetime.datetime.now()
 		reloj_local = datetime.datetime(
 			now.year,now.month, now.day,
@@ -151,10 +147,6 @@ def verificaHoraServerTime():
 		except:
 			print("Entré en excepción porque r=",aux, "caracter=", caracter)
 			print("Entré en excepción porque r=",aux, "caracter=", caracter)
-			print("Entré en excepción porque r=",aux, "caracter=", caracter)
-			print("Entré en excepción porque r=",aux, "caracter=", caracter)
-			print("Entré en excepción porque r=",aux, "caracter=", caracter)
-			print("Entré en excepción porque r=",aux, "caracter=", caracter)
 			
 			intentos_get_hora +=1
 			if intentos_get_hora >= INTENTOS_MAX_GET_HORA and caracter == 'sumas':
@@ -167,17 +159,23 @@ def verificaHoraServerTime():
 					hiloUtc.start()
 					caracter ='tiempo'
 					try:
-						hiloTiempo.join()
+						hiloTiempo.do_run = False
+						#hiloTiempo.join()
 					except Exception as ex:
+						print("Excepción al tratar de matar hiloTiempo", ex, ":::::::::::::")
 						pass
 					print("Trataré de romper el hilo")
+					if numeroServidor == 1:
+						address_to_forward = envGral['server_2']['location']+":"+str(envGral['server_2']['puerto'])
+					else:
+						address_to_forward = envGral['server_1']['location']+":"+str(envGral['server_1']['puerto'])
 					return True
 				else:
 					try:
 						hiloUtc.do_run = False
-						hiloUtc.join()
+						#hiloUtc.join()
 					except Exception as ex:
-						#print(ex)
+						print("Excepción al tratar de matar hiloUtc", ex, ":::::::::::::")
 						pass
 
 			time.sleep(10)
@@ -190,9 +188,6 @@ def verificaHoraServerTime():
 			#print("Hora local:", reloj_local.strftime("%Y-%m-%d %H:%M:%S"), "| Hora UTC:", utc_time.strftime("%Y-%m-%d %H:%M:%S"))
 
 			if reloj_local < utc_time:
-				print("SOLO SETEARÁ HORA!")
-				print("SOLO SETEARÁ HORA!")
-				print("SOLO SETEARÁ HORA!")
 				print("SOLO SETEARÁ HORA!")
 				print("SOLO SETEARÁ HORA!")
 				#if utc_time.microsecond/1000 > 0.7:
@@ -209,9 +204,7 @@ def verificaHoraServerTime():
 			else:
 				print("Va a ralentizar")
 				print("Va a ralentizar")
-				print("Va a ralentizar")
-				print("Va a ralentizar")
-				print("Va a ralentizar")
+				
 				relojes[0].ritmo += 5
 		time.sleep(10)
 
@@ -518,8 +511,9 @@ def valida_merecimiento():
 	print("Alguien quiere ser coordinador:", data)
 
 	if data['prioridad'] < MI_PRIORIDAD:
-		my_ip = get_ip()
-		h = threading.Thread(target=iniciaEleccionNuevoCoordinador, name="Inicia nueva eleccion", args=(data['tipo_servidor'] , prioridad_equipos, my_ip, MI_PRIORIDAD,) )
+		my_ip = get_ip(getPort=True)
+		my_address = my_ip['ip']+":"+str(my_ip['port'])
+		h = threading.Thread(target=iniciaEleccionNuevoCoordinador, name="Inicia nueva eleccion", args=(data['tipo_servidor'] , prioridad_equipos, my_address, MI_PRIORIDAD,) )
 		h.start()
 		return jsonify(ok=True, description={'accepted':False})
 	else:
@@ -540,14 +534,11 @@ def confirma_nuevo_coordinador():
 		address_direccion_server_tiempo = data['nuevo_coordinador']
 		print("La nueva dirección del servidor de tiempo:\n", address_direccion_server_tiempo)
 		print("--------------------------------------------------------------------------------------")
-		caracter = "tiempo"
-		if numeroServidor == 1:
-			address_to_forward = envGral['server_2']['location']+":"+str(envGral['server_2']['puerto'])
-		else:
-			address_to_forward = envGral['server_1']['location']+":"+str(envGral['server_1']['puerto'])
+		caracter = "sumas"
 		
-		hiloTiempo = threading.Thread(target=verificaHoraServerTime, name="Estabiliza tiempo")
-		hiloTiempo.start()
+		#hiloTiempo = threading.Thread(target=verificaHoraServerTime, name="Estabiliza tiempo")
+		#hiloTiempo.start()
+		hiloTiempo.do_run = True
 
 		return jsonify(ok=True, description={'server_changed':True, 'details':"Changed to {}".format(address_direccion_server_tiempo)})
 	else:

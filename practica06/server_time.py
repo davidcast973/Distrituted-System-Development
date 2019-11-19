@@ -15,9 +15,9 @@ import ntplib
 sys.path.append("./classes")
 sys.path.append("./procedures")
 #Includes de práctica:
-from Reloj import Reloj
-from timeServ import *
-from coordinador import *
+from classes.Reloj import Reloj
+from procedures.timeServ import *
+from procedures.coordinador import *
 
 numeroServidor = int(sys.argv[1])
 envGral = json.loads(open("./config/settings.json", "r").read())
@@ -154,6 +154,28 @@ def editaReloj(idReloj,hora, mins):#, segs):
 		return jsonify({'ok':True, 'description': {'reloj_afectado':idReloj, 'nuevo_valor':str(relojes[idReloj])} } )
 	except Exception as ex:
 		return jsonify({'ok':False, 'description': str(ex)})
+
+
+'''
+Eleccion de nuevo coordinador:
+'''
+
+@app.route("/coordinacion/nuevo-coordinador", methods=['POST'])
+def valida_merecimiento():
+	data = request.json
+	print("Alguien quiere ser coordinador:", data)
+	print("Alguien quiere ser coordinador:", data)
+	print("Alguien quiere ser coordinador:", data)
+
+	if data['prioridad'] < MI_PRIORIDAD:
+		my_ip = get_ip(getPort=True)
+		my_address = my_ip['ip']+":"+str(my_ip['port'])
+		h = threading.Thread(target=iniciaEleccionNuevoCoordinador, name="Inicia nueva eleccion", args=(data['tipo_servidor'] , prioridad_equipos, my_address, MI_PRIORIDAD,) )
+		h.start()
+		return jsonify(ok=True, description={'accepted':False})
+	else:
+		#FALTA Switch para ahora pedir el tiempo al nuevo servidor
+		return jsonify(ok=True, description={'accepted':True})
 
 
 if __name__ == "__main__":
