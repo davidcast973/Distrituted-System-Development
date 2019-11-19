@@ -32,6 +32,19 @@
         "send_to" : "10.100.74.49:80",
         "priority" : 2
     },
+    "server_3":{
+        "numero" : 3,
+        "puerto" : 120,
+        "database" : {
+            "name": "resguardo_sumas_2",
+            "server": "10.100.70.115",
+            "user": "root",
+            "password": "12345"
+        },
+        "location" : "192.168.0.9",
+        "send_to" : "10.100.74.49:80",
+        "priority" : 3
+    },
     "server_clock_1":{
         "numero" : 1,
         "puerto" : 110,

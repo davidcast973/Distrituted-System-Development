@@ -149,12 +149,13 @@ def verificaHoraServerTime():
 			aux = r
 			json_resp = json.loads(r.text)
 		except:
-			print("Entré en excepción porque r=",aux)
-			print("Entré en excepción porque r=",aux)
-			print("Entré en excepción porque r=",aux)
-			print("Entré en excepción porque r=",aux)
-			print("Entré en excepción porque r=",aux)
-
+			print("Entré en excepción porque r=",aux, "caracter=", caracter)
+			print("Entré en excepción porque r=",aux, "caracter=", caracter)
+			print("Entré en excepción porque r=",aux, "caracter=", caracter)
+			print("Entré en excepción porque r=",aux, "caracter=", caracter)
+			print("Entré en excepción porque r=",aux, "caracter=", caracter)
+			print("Entré en excepción porque r=",aux, "caracter=", caracter)
+			
 			intentos_get_hora +=1
 			if intentos_get_hora >= INTENTOS_MAX_GET_HORA and caracter == 'sumas':
 				#INICIA PROCESO DE ELECCION
@@ -544,6 +545,9 @@ def confirma_nuevo_coordinador():
 			address_to_forward = envGral['server_2']['location']+":"+str(envGral['server_2']['puerto'])
 		else:
 			address_to_forward = envGral['server_1']['location']+":"+str(envGral['server_1']['puerto'])
+		
+		hiloTiempo = threading.Thread(target=verificaHoraServerTime, name="Estabiliza tiempo")
+		hiloTiempo.start()
 
 		return jsonify(ok=True, description={'server_changed':True, 'details':"Changed to {}".format(address_direccion_server_tiempo)})
 	else:
@@ -588,9 +592,33 @@ if __name__ == "__main__":
 	relojes[0].start()
 	print("Inició hilo:",relojes[0])
 
+	my_ip = get_ip(getPort=True)
+	my_address = my_ip['ip']+":"+str(my_ip['port'])
+	a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
+
+	if a == True:
+		hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
+		hiloUtc.start()
+		caracter ='tiempo'
+		try:
+			hiloTiempo.join()
+		except Exception as ex:
+			pass
+		print("Trataré de romper el hilo")
+	else:
+		try:
+			hiloUtc.do_run = False
+			hiloUtc.join()
+		except Exception as ex:
+			#print(ex)
+			pass
+
+
 	hiloTiempo = threading.Thread(target=verificaHoraServerTime, name="Estabiliza tiempo")
 	hiloTiempo.start()
 	print("Inició coordinador")
+
+
 
 	app.run(port=puertoServer, debug=True, host='0.0.0.0', use_reloader=False)
 	

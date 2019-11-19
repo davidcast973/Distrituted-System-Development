@@ -20,10 +20,15 @@ from timeServ import *
 from coordinador import *
 
 numeroServidor = int(sys.argv[1])
-env = json.loads(open("./config/settings.json", "r").read())['server_clock_'+str(numeroServidor)]
+envGral = json.loads(open("./config/settings.json", "r").read())
+env = envGral['server_clock_'+str(numeroServidor)]
+
+MI_PRIORIDAD = env['priority']
+
 
 app = Flask(__name__)
 
+prioridad_equipos = []
 hilo = 1
 relojes = []
 date_time_str = '2019-10-13 15:00:27'
@@ -153,6 +158,14 @@ def editaReloj(idReloj,hora, mins):#, segs):
 
 if __name__ == "__main__":
 	global database
+
+	for equipo in envGral:
+		if 'server' in equipo:
+			ip_server = envGral[equipo]['location']+':'+str(envGral[equipo]['puerto'])
+			prioridad = envGral[equipo]['priority']
+
+			prior_equipo = { 'direccion': ip_server, 'prioridad': prioridad }
+			prioridad_equipos.append( prior_equipo )
 	
 	puertoServer = env['puerto']
 	database = env['database']
@@ -164,6 +177,27 @@ if __name__ == "__main__":
 	print("Inició hilo:",hilo)
 	relojes[0].start()
 	hilo+=1
+
+	my_ip = get_ip(getPort=True)
+	my_address = my_ip['ip']+":"+str(my_ip['port'])
+	a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
+
+	if a == True:
+		hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
+		hiloUtc.start()
+		caracter ='tiempo'
+		try:
+			hiloTiempo.join()
+		except Exception as ex:
+			pass
+		print("Trataré de romper el hilo")
+	else:
+		try:
+			hiloUtc.do_run = False
+			hiloUtc.join()
+		except Exception as ex:
+			#print(ex)
+			pass
 
 	hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
 	hiloUtc.start()
