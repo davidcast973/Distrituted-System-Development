@@ -1,0 +1,61 @@
+{
+
+    "jugador_1":{
+        "send_to": "localhost:70"
+    },
+    "jugador_2":{
+        "send_to": "localhost:80"
+    },
+    "server_1":{
+        "numero" : 1,
+        "puerto" : 70,
+        "database" : {
+            "name": "resguardo_sumas_1",
+            "server": "10.100.70.115",
+            "user": "root",
+            "password": "12345"
+        },
+        "location" : "192.168.0.9",
+        "send_to" : "localhost:80",
+        "priority" : 1
+    },
+    "server_2":{
+        "numero" : 2,
+        "puerto" : 80,
+        "database" : {
+            "name": "resguardo_sumas_2",
+            "server": "10.100.70.115",
+            "user": "root",
+            "password": "12345"
+        },
+        "location" : "192.168.0.9",
+        "send_to" : "localhost:70",
+        "priority" : 2
+    },
+    "server_3":{
+        "numero" : 3,
+        "puerto" : 90,
+        "database" : {
+            "name": "resguardo_sumas_3",
+            "server": "10.100.70.115",
+            "user": "root",
+            "password": "12345"
+        },
+        "location" : "192.168.0.9",
+        "send_to" : "localhost:70",
+        "priority" : 3
+    },
+    "server_clock_1":{
+        "numero" : 1,
+        "puerto" : 110,
+        "database" : {
+            "name": "resguardo_sumas_1",
+            "server": "10.100.70.115",
+            "user": "root",
+            "password": "12345"
+        },
+        "location" : "192.168.0.9",
+        "send_to" : "localhost:80",
+        "priority" : 100
+    }
+}
