@@ -160,7 +160,7 @@ def verificaHoraServerTime():
 					except Exception as ex:
 						print("Excepción al tratar de matar hiloTiempo", ex, ":::::::::::::")
 						pass
-					print("Trataré de romper el hilo")
+					print("Trataré de romper el hilo de obtención de hora verificaHoraServerTime")
 					if numeroServidor == 1:
 						address_to_forward = envGral['server_2']['location']+":"+str(envGral['server_2']['puerto'])
 					else:
@@ -574,7 +574,7 @@ def confirma_nuevo_coordinador():
 		#hiloTiempo = threading.Thread(target=verificaHoraServerTime, name="Estabiliza tiempo")
 		#hiloTiempo.start()
 		hiloTiempo.do_run = True
-		#validaConcenso()
+		validaConcenso()
 		return jsonify(ok=True, description={'server_changed':True, 'details':"Changed to {}".format(address_direccion_server_tiempo)})
 	else:
 		return jsonify(ok=False, description={'server_changed':False, 'details':"Servidor inesperado:{}".format(data['tipo_servidor'])})
@@ -627,7 +627,7 @@ def checkNewCoordinator():
 	global voBos
 	data = request.json
 	voBos.append( data['my_coordinator'] )
-	#valida_nuevo_coordinador(  )
+	valida_nuevo_coordinador(  )
 	return jsonify(ok=True, description= 'Coordinator received: {}'.format(data['my_coordinator']) )
 
 

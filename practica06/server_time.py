@@ -245,4 +245,4 @@ if __name__ == "__main__":
 	hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
 	hiloUtc.start()
 
-	app.run(port=puertoServer, debug=True, host='0.0.0.0')
+	app.run(port=puertoServer, debug=True, host='0.0.0.0', use_reloader = False)
