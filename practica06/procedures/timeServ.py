@@ -7,7 +7,7 @@ sys.path.append("./libs")
 from sqlBd import Bd
 
 def get_ip(getPort = False):
-	from practica05.server_time import env
+	from practica06.server_time import env
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	try:
 		# doesn't even have to be reachable

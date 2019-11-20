@@ -19,6 +19,7 @@ respuestas = []
 
 hiloUtc = ""
 
+
 def avisa_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP, myPriority, location_array):
 	global respuestas
 	print("Le estoy avisando a {}, que quiero ser el coordinador".format(equipo_destino))
@@ -67,12 +68,7 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 		if equipo['direccion'] == myIP:
 			print("Estoy haciendo skip para avisar :", equipo)
 			print("Estoy haciendo skip para avisar :", equipo)
-			print("Estoy haciendo skip para avisar :", equipo)
-			print("Estoy haciendo skip para avisar :", equipo)
-			print("Estoy haciendo skip para avisar :", equipo)
-			print("Estoy haciendo skip para avisar :", equipo)
-			print("Estoy haciendo skip para avisar :", equipo)
-			print("Estoy haciendo skip para avisar :", equipo)
+			
 			continue
 		if equipo['prioridad']>myPriority:
 			#print("Le voy a avisar a {}, que quiero ser el coordinador".format(equipo))
@@ -92,11 +88,7 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 			if equipo['direccion'] == myIP:
 				print("Estoy haciendo skip de mi dirección:", equipo)
 				print("Estoy haciendo skip de mi dirección:", equipo)
-				print("Estoy haciendo skip de mi dirección:", equipo)
-				print("Estoy haciendo skip de mi dirección:", equipo)
-				print("Estoy haciendo skip de mi dirección:", equipo)
-				print("Estoy haciendo skip de mi dirección:", equipo)
-				print("Estoy haciendo skip de mi dirección:", equipo)
+				
 				continue
 			#Le avisa a todo mundo que él es el nuevo coordinador
 			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo, myIP) ) 
@@ -115,6 +107,21 @@ def leeArchivoTxt(pathFilename):
 	for num in numsStr:
 		numsList.append( int(num.strip()) )
 	return numsList
+
+def get_ip(getPort = False):
+	from practica06.server_coordinador import env
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	try:
+		# doesn't even have to be reachable
+		s.connect(('10.255.255.255', 1))
+		IP = s.getsockname()[0]
+	except:
+		IP = '127.0.0.1'
+	finally:
+		s.close()
+	if getPort == True:
+		return {'ip':IP, 'port':env['puerto']}
+	return IP
 
 #Esta función guardará los datos recibidos en la Base de datos
 def guardaEnBd(ip_origen, numeroServer, suma, relojObject, nombreEquipo, dbName=None):

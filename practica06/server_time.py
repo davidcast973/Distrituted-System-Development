@@ -34,6 +34,22 @@ relojes = []
 date_time_str = '2019-10-13 15:00:27'
 date_time_obj = datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
 
+
+def get_ip(getPort = False):
+	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	try:
+		# doesn't even have to be reachable
+		s.connect(('10.255.255.255', 1))
+		IP = s.getsockname()[0]
+	except:
+		IP = '127.0.0.1'
+	finally:
+		s.close()
+	if getPort == True:
+		return {'ip':IP, 'port':env['puerto']}
+	return IP
+
+
 #Esta ruta predeterminada lo redirije a /time
 @app.route("/")
 def goToMain():
@@ -106,22 +122,22 @@ def obtieneTiempoUTC():
 
 def obtenUTCTime():
 	 while True:
-		  c = ntplib.NTPClient()
+		  #c = ntplib.NTPClient()
 		  # Provide the respective ntp server ip in below function
-		  response_utc_time = c.request('3.mx.pool.ntp.org', version=3)
-
+		  #response_utc_time = c.request('3.mx.pool.ntp.org', version=3)
+		  relojUtc = datetime.datetime.now()
 		  #return {'ok':True, 'description':{'UTC-Time':response_utc_time.tx_time, 'offset':response_utc_time.offset}}
 
-		  relojUtc = datetime.datetime.fromtimestamp(response_utc_time.tx_time)
+		  #relojUtc = datetime.datetime.fromtimestamp(response_utc_time.tx_time)
 
-		  if relojUtc.microsecond/1000 > 0.5:
+		  if relojUtc.microsecond/1000 > 0.7:
 			  suma = 1
 		  else:
 			  suma = 0
 
 		  relojes[0].hora = relojUtc.hour
 		  relojes[0].mins = relojUtc.minute
-		  relojes[0].segs = relojUtc.second + suma + int(response_utc_time.offset)
+		  relojes[0].segs = relojUtc.second + suma
 		  time.sleep(30)
 
 #Retorna un json 
@@ -178,6 +194,28 @@ def valida_merecimiento():
 		return jsonify(ok=True, description={'accepted':True})
 
 
+@app.route("/coordinacion/inicia-eleccion")
+def inicia_eleccion_coord():
+	my_ip = get_ip(getPort=True)
+	my_address = my_ip['ip']+":"+str(my_ip['port'])
+	a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
+	if a == True:
+		hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
+		hiloUtc.start()
+		caracter ='tiempo'
+		try:
+			hiloTiempo.join()
+		except Exception as ex:
+			pass
+		print("Trataré de romper el hilo")
+	else:
+		try:
+			hiloUtc.do_run = False
+			hiloUtc.join()
+		except Exception as ex:
+			#print(ex)
+			pass
+
 if __name__ == "__main__":
 	global database
 
@@ -199,27 +237,6 @@ if __name__ == "__main__":
 	print("Inició hilo:",hilo)
 	relojes[0].start()
 	hilo+=1
-
-	my_ip = get_ip(getPort=True)
-	my_address = my_ip['ip']+":"+str(my_ip['port'])
-	a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
-
-	if a == True:
-		hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
-		hiloUtc.start()
-		caracter ='tiempo'
-		try:
-			hiloTiempo.join()
-		except Exception as ex:
-			pass
-		print("Trataré de romper el hilo")
-	else:
-		try:
-			hiloUtc.do_run = False
-			hiloUtc.join()
-		except Exception as ex:
-			#print(ex)
-			pass
 
 	hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
 	hiloUtc.start()

@@ -15,7 +15,7 @@
             "user": "root",
             "password": "12345"
         },
-        "location" : "192.168.0.9",
+        "location" : "10.100.72.14",
         "send_to" : "localhost:80",
         "priority" : 1
     },
@@ -28,20 +28,20 @@
             "user": "root",
             "password": "12345"
         },
-        "location" : "192.168.0.9",
+        "location" : "10.100.72.14",
         "send_to" : "10.100.74.49:80",
         "priority" : 2
     },
     "server_3":{
         "numero" : 3,
-        "puerto" : 120,
+        "puerto" : 60,
         "database" : {
             "name": "resguardo_sumas_2",
             "server": "10.100.70.115",
             "user": "root",
             "password": "12345"
         },
-        "location" : "192.168.0.9",
+        "location" : "localhost",
         "send_to" : "10.100.74.49:80",
         "priority" : 3
     },
@@ -54,7 +54,7 @@
             "user": "root",
             "password": "12345"
         },
-        "location" : "192.168.0.9",
+        "location" : "10.100.72.14",
         "send_to" : "localhost:80",
         "priority" : 100
     }
