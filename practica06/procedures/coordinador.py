@@ -60,16 +60,21 @@ def confirma_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP):
 		pass
 
 def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPriority):
+	"""
+	Es el proceso que de elección de nuevo coordinador. Regresa verdadero si el equipo actual resulta
+	coordinador o de tiempo. 
+	Retornará Falso si queda como servidor de sumas
+	"""
 	global respuestas, hiloUtc
 	print("Estoy iniciando proceso de elección")
 	respuestas = [None]*len(prioridadEquipos)
 	a = 0
 	for equipo in prioridadEquipos:
-		if equipo['direccion'] == myIP:
-			print("Estoy haciendo skip para avisar :", equipo)
-			print("Estoy haciendo skip para avisar :", equipo)
+		# if equipo['direccion'] == myIP:
+		# 	print("Estoy haciendo skip para avisar :", equipo)
+		# 	print("Estoy haciendo skip para avisar :", equipo)
 			
-			continue
+		# 	continue
 		if equipo['prioridad']>myPriority:
 			#print("Le voy a avisar a {}, que quiero ser el coordinador".format(equipo))
 			print("Iniciando hilo para avisarles")
@@ -85,11 +90,11 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 	else:
 		for equipo in prioridadEquipos:
 			#print("Le estoy confirmando a {}, que seré el coordinador".format(equipo))
-			if equipo['direccion'] == myIP:
-				print("Estoy haciendo skip de mi dirección:", equipo)
-				print("Estoy haciendo skip de mi dirección:", equipo)
+			#if equipo['direccion'] == myIP:
+			#	print("Estoy haciendo skip de mi dirección:", equipo)
+			#	print("Estoy haciendo skip de mi dirección:", equipo)
 				
-				continue
+			#	continue
 			#Le avisa a todo mundo que él es el nuevo coordinador
 			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo, myIP) ) 
 			h.start()
@@ -144,19 +149,19 @@ def guardaEnBd(ip_origen, numeroServer, suma, relojObject, nombreEquipo, dbName=
 
 	return resultado
 
-# def sendResultToOtherServer(ip_origen, numeroServer, suma, nombreEquipoOrigen):
-# 	from server_coordinador import env
-# 	print("Llegó a función de hilo")
-# 	destino = env['send_to']
-# 	data_to_send = {
-# 		'ip_origin' : ip_origen,
-# 		'num_jugador_origin' : numeroServer,
-# 		'resultado_suma' : suma,
-# 		'nombre_equipo_origin' : nombreEquipoOrigen
-# 	}
-# 	r = requests.post("http://"+destino+"/numeros/save-result-peer", json=data_to_send)
-# 	print("Hizo petición de hilo y regresará")
-# 	return r.text
+def sendResultToOtherServer(ip_origen, numeroServer, suma, nombreEquipoOrigen):
+	from server_coordinador import env
+	print("Llegó a función de hilo")
+	destino = env['send_to']
+	data_to_send = {
+		'ip_origin' : ip_origen,
+		'num_jugador_origin' : numeroServer,
+		'resultado_suma' : suma,
+		'nombre_equipo_origin' : nombreEquipoOrigen
+	}
+	r = requests.post("http://"+destino+"/numeros/save-result-peer", json=data_to_send)
+	print("Hizo petición de hilo y regresará")
+	return r.text
 
 def connectToBd(dbName=None):
 
@@ -165,8 +170,8 @@ def connectToBd(dbName=None):
 		bd_name = "resguardo_sumas_1"
 
 	return Bd(	
-		hostname = "10.100.70.115",
+		hostname = "localhost",
 		username = "root",
-		password = "12345",
+		password = "",
 		database = bd_name
 	)

@@ -145,9 +145,15 @@ def verificaHoraServerTime():
 				my_address = my_ip['ip']+":"+str(my_ip['port'])
 				a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
 				if a == True:
+					print("Ahora seré un servidor de TIEMPO!")
+					print("Ahora seré un servidor de TIEMPO!")
+					print("Ahora seré un servidor de TIEMPO!")
 					hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
 					hiloUtc.start()
 					caracter ='tiempo'
+					print("Valor de caracter:", caracter)
+					print("Valor de caracter:", caracter)
+					print("Valor de caracter:", caracter)
 					try:
 						hiloTiempo.do_run = False
 						#hiloTiempo.join()
@@ -163,6 +169,7 @@ def verificaHoraServerTime():
 				else:
 					try:
 						hiloUtc.do_run = False
+						hiloTiempo.do_run = True
 						#hiloUtc.join()
 					except Exception as ex:
 						print("Excepción al tratar de matar hiloUtc", ex, ":::::::::::::")
@@ -447,58 +454,6 @@ def exponeSumaDeJugador(idJugador):
 	else:
 		return jsonify(ok=False, description="Jugador Inexistente")
 
-# @app.route("/numeros/getUtcTime", methods=['GET'])
-# def obtieneTiempoUTC():
-# 	if am_i_a_sum_server() == False:
-# 		return forward_to_sum_server(request.full_path)
-
-# 	global finalizo, relojes, hiloTime
-# 	host_name = socket.gethostname() 
-# 	host_ip = socket.gethostbyname(host_name)
-# 	print("Socket name info:",host_ip)
-# 	now = datetime.datetime.now()
-	
-# 	reloj_local = datetime.datetime(
-# 		now.year,now.month, now.day,
-# 		#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
-# 		relojes[0].hora, relojes[0].mins, relojes[0].segs
-# 	)
-
-# 	tiempo = {
-# 		"ip_server" : host_ip,
-# 		"hora_server" : reloj_local.timestamp()
-# 	}
-
-# 	r = requests.post("http://10.100.70.115/time/get-current-time/", json=tiempo)
-
-# 	json_resp = json.loads(r.text)
-
-# 	if json_resp['ok'] == True:
-# 		tiempo = json_resp['description']['UTC-time']+json_resp['description']['ajuste']
-# 		#utc_time = datetime.datetime.fromtimestamp( tiempo, datetime.timezone.utc)
-# 		utc_time = datetime.datetime.fromtimestamp( tiempo )
-# 		reloj_local = datetime.datetime(
-# 			now.year,now.month, now.day,
-# 			#relojes[0].hora, relojes[0].mins, relojes[0].segs,tzinfo=datetime.timezone.utc
-# 			relojes[0].hora, relojes[0].mins, relojes[0].segs
-# 		)
-# 		print("Hora UTC:", utc_time)
-# 		print("Hora Hilo:", reloj_local)
-# 		if utc_time >= reloj_local:
-# 			print("UTC es mayor")
-# 			relojes[0].hora = utc_time.hour
-# 			relojes[0].mins = utc_time.minute
-# 			relojes[0].segs = utc_time.second
-# 			relojes[0].ritmo = 1
-# 		else:
-# 			print("Local es mayor")
-# 			dif = utc_time-reloj_local
-# 			relojes[0].ritmo += 5
-# 			#hiloTime = threading.Thread(target=verificaHoraServerTime, name="Verifica_tiempo", args=(reloj_local,))
-# 			#hiloTime.start()
-	
-# 	return flask.redirect("/", 302)
-
 
 @app.route("/time/prueba-timing-time", methods=['POST'])
 def pruebaDeReboteParaTiming():
@@ -567,7 +522,8 @@ def sendCurrentTime():
 					ipServer, 
 					secondsSumaFinal, 
 					horaServer,
-					(timeDif.microseconds/2)
+					(timeDif.microseconds/2),
+					"C"+str(numeroServidor)
 			)
 	)
 	hiloGuardadp.start()
@@ -587,8 +543,7 @@ Eleccion de nuevo coordinador:
 def valida_merecimiento():
 	data = request.json
 	print("Alguien quiere ser coordinador:", data)
-	print("Alguien quiere ser coordinador:", data)
-	print("Alguien quiere ser coordinador:", data)
+
 
 	if data['prioridad'] < MI_PRIORIDAD:
 		my_ip = get_ip(getPort=True)
@@ -629,10 +584,12 @@ def confirma_nuevo_coordinador():
 
 @app.route("/coordinacion/inicia-eleccion")
 def inicia_eleccion_coord():
+	global caracter
 	my_ip = get_ip(getPort=True)
 	my_address = my_ip['ip']+":"+str(my_ip['port'])
 	a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
 	if a == True:
+		#Resultó este servidor elegido como coordinador
 		hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
 		hiloUtc.start()
 		caracter ='tiempo'
@@ -644,10 +601,16 @@ def inicia_eleccion_coord():
 	else:
 		try:
 			hiloUtc.do_run = False
-			hiloUtc.join()
+			hiloTiempo.do_run = True
 		except Exception as ex:
 			#print(ex)
 			pass
+	return jsonify(ok=True, caracter=caracter)
+	#return flask.redirect("/", code=302)
+
+@app.route("/get-caracter")
+def returnCaracter():
+	return jsonify(ok=True, caracter=caracter)
 
 '''
 Fin Elección de nuevo coordinador

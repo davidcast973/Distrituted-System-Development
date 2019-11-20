@@ -21,8 +21,7 @@ def get_ip(getPort = False):
 		return {'ip':IP, 'port':env['puerto']}
 	return IP
 
-def guardaDatosHoraEnBd(reloj, ipServer, offset, horaServer, latencia):
-	return True
+def guardaDatosHoraEnBd(reloj, ipServer, offset, horaServer, latencia, bd_srvr_tiempo=None):
 	host_ip = get_ip()
 	now = datetime.datetime.now()
 	#hora = -1
@@ -57,7 +56,7 @@ def guardaDatosHoraEnBd(reloj, ipServer, offset, horaServer, latencia):
 	hora = reloj_local.timestamp()
 
 	#bd = Bd("reloj_utc", hostname='localhost', username='root', password='12345')
-	bd = Bd("reloj_utc", hostname='localhost', username='root', password='')
+	bd = conectaBd(bd_srvr_tiempo)
 
 	#print("Hoy:", hoy, "| horaRef:", horaReferencia)
 	horaReferencia = datetime.datetime.now().timestamp()
@@ -86,4 +85,8 @@ def guardaDatosHoraEnBd(reloj, ipServer, offset, horaServer, latencia):
 	bd.doQuery("UPDATE servidores SET latencia = '{}' WHERE id = '{}';".format(latencia, idServer))
 
 
-	
+def conectaBd(bd_srvr_tiempo):
+	if bd_srvr_tiempo is None:
+		return Bd("reloj_utc", hostname='localhost', username='root', password='')
+	elif "C" in bd_srvr_tiempo:
+		return Bd("reloj_utc_"+bd_srvr_tiempo, hostname='localhost', username='root', password='')

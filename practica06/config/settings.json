@@ -1,7 +1,7 @@
 {
 
     "jugador_1":{
-        "send_to": "10.100.74.49:80"
+        "send_to": "localhost:70"
     },
     "jugador_2":{
         "send_to": "localhost:80"
@@ -15,7 +15,7 @@
             "user": "root",
             "password": "12345"
         },
-        "location" : "10.100.72.14",
+        "location" : "192.168.0.9",
         "send_to" : "localhost:80",
         "priority" : 1
     },
@@ -28,8 +28,8 @@
             "user": "root",
             "password": "12345"
         },
-        "location" : "10.100.72.14",
-        "send_to" : "10.100.74.49:80",
+        "location" : "192.168.0.9",
+        "send_to" : "localhost:70",
         "priority" : 2
     },
     "server_3":{
@@ -41,8 +41,8 @@
             "user": "root",
             "password": "12345"
         },
-        "location" : "localhost",
-        "send_to" : "10.100.74.49:80",
+        "location" : "192.168.0.9",
+        "send_to" : "localhost:70",
         "priority" : 3
     },
     "server_clock_1":{
@@ -54,7 +54,7 @@
             "user": "root",
             "password": "12345"
         },
-        "location" : "10.100.72.14",
+        "location" : "192.168.0.9",
         "send_to" : "localhost:80",
         "priority" : 100
     }

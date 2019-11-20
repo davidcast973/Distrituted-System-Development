@@ -21,7 +21,10 @@ from procedures.coordinador import *
 
 numeroServidor = int(sys.argv[1])
 envGral = json.loads(open("./config/settings.json", "r").read())
-env = envGral['server_clock_'+str(numeroServidor)]
+try:
+	env = envGral['server_clock_'+str(numeroServidor)]
+except:
+	env = envGral['server_'+str(numeroServidor)]
 
 MI_PRIORIDAD = env['priority']
 
@@ -215,6 +218,7 @@ def inicia_eleccion_coord():
 		except Exception as ex:
 			#print(ex)
 			pass
+	return flask.redirect('/', code=302)
 
 if __name__ == "__main__":
 	global database
