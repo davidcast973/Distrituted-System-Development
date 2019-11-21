@@ -1,9 +1,9 @@
 {
 
-    "jugador_1":{
+    "frontend_1":{
         "send_to": "10.100.74.49"
     },
-    "jugador_2":{
+    "frontend_2":{
         "send_to": "10.100.66.166"
     },
     "server_1":{
@@ -38,14 +38,14 @@
         "numero" : 3,
         "puerto" : 80,
         "database" : {
-            "name": "resguardo_sumas_2",
+            "name": "resguardo_sumas_3",
             "server": "10.100.70.115",
             "user": "root",
             "password": "12345"
         },
-        "location" : "10.100.69.234",
+        "location" : "10.100.74.65",
         "send_to" : "localhost:80",
-        "priority" : 3,
+        "priority" : 50,
         "type" : "ar_secundario"
     },
     "server_clock_1":{
@@ -59,7 +59,7 @@
         },
         "location" : "10.100.66.171",
         "send_to" : "localhost:80",
-        "priority" : 100,
+        "priority" : -1,
         "type" : "reloj_primario"
     }
 }

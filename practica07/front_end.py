@@ -12,6 +12,7 @@ import os
 import socket
 import sys
 import time
+import random
 
 #Includes de práctica:
 from classes.Reloj import Reloj
@@ -108,12 +109,21 @@ def enviaTxt2Coordinador(fileToSend):
 	archivo_a_enviar = {'archivoTxt': open('./static/uploads/jugadores/'+fileToSend.filename, 'rb')}
 
 	data_send = {'servidor':numeroServidorJugador, 'equipo':socket.getfqdn()}
-	env = json.loads( open("./config/settings.json","r").read() )['jugador_'+str(numeroServidorJugador)]
+	envGral = json.loads( open("./config/settings.json","r").read() )
+	#env = envGral['frontend_'+str(numeroServidorJugador)]
 	
 	#Meter la parte de a quién se le debería enviar...
+	all_ars_and_prim = get_AR_primario(envGral)
+	ar_primario = all_ars_and_prim['ar_primario']
+	try:
+		result = requests.post("http://{}/numeros/save-sum-numbers".format( ar_primario ), data=data_send ,files=archivo_a_enviar )
+	except Exception as ex:
+		print("El coordinador está muerto...")
+		#Inicia proceos de elección de nuevo coordinador AR PRIMARIO
+		nuevo = inicia_eleccion_nuevo_ar_primario(all_ars_and_prim['all_ars'], envGral)
+		
+		result = requests.post("http://{}/numeros/save-sum-numbers".format( nuevo ), data=data_send ,files=archivo_a_enviar )
 
-	result = requests.post("http://{}/numeros/save-sum-numbers".format(env['send_to']), data=data_send ,files=archivo_a_enviar )
-	
 	if result.status_code == requests.codes.ok:
 		response['ok'] = True
 	
@@ -152,6 +162,32 @@ def remueveArchivoRecibido(archivo, sinuso):
 		except:
 			time.sleep(1)
 
+def get_AR_primario(envGral):
+	equipos = []
+	ar_prim = ""
+
+	for equipo in envGral:
+		if 'server_' in equipo:
+			equipos.append( envGral[equipo]['location'] )
+	
+	for a in range(0,2):
+		aleatorio = random.randint(0, len(equipos)-1)
+		try:
+			r = requests.get("http://"+equipos[aleatorio]+"/coordinacion/get-coordinator" )
+			response = json.loads( r.text )
+			ar_prim = response['description']['address_ar_primario']
+		except Exception as ex:
+			print("Estaba muerto el equipo: {}".format(equipos[aleatorio]))
+	
+	return {'ar_primario':ar_prim, 'all_ars':equipos}
+
+def inicia_eleccion_nuevo_ar_primario(equipos_ar, envGral):
+	aleatorio = random.randint(0, len(equipos_ar)-1)
+	r = requests.get("http://"+ equipos_ar[aleatorio] +"/coordinacion/inicia-eleccion/ar_primario" )
+	response = json.loads( r.text )
+	#nuevo_coordinador = response['description']['nuevo_coordinador']
+	todos_los_ars = get_AR_primario( envGral )
+	return todos_los_ars['ar_primario']
 
 if __name__ == "__main__":
 	numeroServidorJugador = int(sys.argv[1])

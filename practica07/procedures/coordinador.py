@@ -23,7 +23,7 @@ hiloUtc = ""
 
 def avisa_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP, myPriority, location_array):
 	global respuestas
-	print("Le estoy avisando a {}, que quiero ser el coordinador".format(equipo_destino))
+	print("Le estoy avisando a {}, que quiero ser el COORD d {}".format(equipo_destino, tipoServer))
 	url_avisa_coord = "/coordinacion/nuevo-coordinador"
 	datos = {
 		'nuevo_coordinador' : myIP,
@@ -43,13 +43,13 @@ def avisa_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP, myPriority, lo
 def confirma_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP):
 	global respuestas
 	url_confirma_coord = "/coordinacion/confirma-coordinador"
-	print("Se va a setear al nuevo coordinador ubicado en:", myIP)
+	print("Se va a setear al nuevo coordinador {} ubicado en: {}".format(tipoServer,myIP))
 	datos = {
 		'nuevo_coordinador' : myIP,
 		'tipo_servidor': tipoServer
 	}
 	try:
-		print("Haré petición de confirmación a:", "http://"+equipo_destino['direccion'] + url_confirma_coord)
+		print("Haré confirmación a:", "http://"+equipo_destino['direccion'] + url_confirma_coord)
 		r = requests.post("http://"+ equipo_destino['direccion'] + url_confirma_coord, json=datos)
 		#print("RESPUESTA DE confirmación que soy el coordinador:", r.text, "estatus:", r.status_code)
 		if r.status_code == 200:
@@ -57,7 +57,7 @@ def confirma_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP):
 		#	respuestas[ location_array ] = response['description']['accepted']
 		#pass
 	except Exception as ex:
-		print("No se pudo hacer petición de confirmación a ", equipo_destino)
+		print("No pudo hacer confirmación a ", equipo_destino)
 		pass
 
 def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPriority):
@@ -71,11 +71,11 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 	respuestas = [None]*len(prioridadEquipos)
 	a = 0
 	for equipo in prioridadEquipos:
-		# if equipo['direccion'] == myIP:
-		# 	print("Estoy haciendo skip para avisar :", equipo)
-		# 	print("Estoy haciendo skip para avisar :", equipo)
+		if equipo['direccion'] == myIP:
+			print("Estoy haciendo skip para avisar :", equipo)
+			print("Estoy haciendo skip para avisar :", equipo)
 			
-		# 	continue
+			continue
 		if equipo['prioridad']>myPriority:
 			#print("Le voy a avisar a {}, que quiero ser el coordinador".format(equipo))
 			print("Iniciando hilo para avisarles")
@@ -91,11 +91,11 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 	else:
 		for equipo in prioridadEquipos:
 			#print("Le estoy confirmando a {}, que seré el coordinador".format(equipo))
-			#if equipo['direccion'] == myIP:
-			#	print("Estoy haciendo skip de mi dirección:", equipo)
-			#	print("Estoy haciendo skip de mi dirección:", equipo)
+			if equipo['direccion'] == myIP:
+				print("Estoy haciendo skip de mi dirección:", equipo)
+				print("Estoy haciendo skip de mi dirección:", equipo)
 				
-			#	continue
+				continue
 			#Le avisa a todo mundo que él es el nuevo coordinador
 			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo, myIP) ) 
 			h.start()
@@ -181,10 +181,9 @@ def sendResultToOtherServer(ip_origen, numeroServer, suma, nombreEquipoOrigen, e
 
 
 def connectToBd(dbName=None):
-
 	bd_name=dbName
-	if dbName is None:
-		bd_name = "resguardo_sumas_1"
+	#if dbName is None:
+	#	bd_name = "resguardo_sumas_1"
 
 	return Bd(	
 		hostname = "10.100.69.234",

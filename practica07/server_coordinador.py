@@ -46,7 +46,7 @@ equipos_vivos = []
 intentos_get_hora = 0
 address_direccion_server_tiempo = envGral['server_clock_1']['location']#":"+str(envGral['server_clock_1']['puerto'])
 address_to_forward = ""
-address_ar_primario = ""
+#address_ar_primario = ""
 
 #hiloTiempo = ""
 
@@ -102,7 +102,7 @@ def forward_to_sum_server(full_path):
 	return flask.redirect("http://{}/{}".format(address_to_forward, full_path), code=307)
 
 def am_i_a_sum_server():
-	if caracter == 'sumas':
+	if caracter in ['sumas','ar_primario', 'ar_secundario']:
 		return True
 	return False
 
@@ -131,7 +131,7 @@ def verificaHoraServerTime():
 		
 		aux = ""
 		try:
-			print("Estoy pidiendo la nueva hora a:", address_direccion_server_tiempo)
+			#print("Estoy pidiendo la nueva hora a:", address_direccion_server_tiempo)
 			r = requests.post("http://{}/time/get-current-time/".format(address_direccion_server_tiempo), json=detalles_servidor)
 			aux = r
 			json_resp = json.loads(r.text)
@@ -237,8 +237,11 @@ def comunicaCoordinador( equipo_a_preguntar, tipo_coordinador="tiempo"):
 	ruta = "/coordinacion/tell-me-your-coordinator"
 	datos = {
 		'type' : tipo_coordinador,
-		'my_coordinator':address_direccion_server_tiempo
 	}
+	if tipo_coordinador == 'tiempo':
+		datos['my_coordinator']=address_direccion_server_tiempo
+	elif 'ar_' in tipo_coordinador:
+		datos['my_coordinator']=address_ar_primario
 	try:
 		r = requests.post("http://"+equipo_a_preguntar['direccion']+ruta, json=datos)
 		response = json.loads(r.text)
@@ -255,22 +258,23 @@ def pingCheckServersAlive(equipo_a_preguntar):
 	equipos_vivos = []
 	ruta_ping = "/time/prueba-timing-time"
 	try:
-		r = requests.post("http://"+equipo_a_preguntar+ruta_ping)
+		print("Viendo si el equipo >{}< está vivo...".format(equipo_a_preguntar['direccion']))
+		r = requests.post("http://"+equipo_a_preguntar['direccion']+ruta_ping)
 		response = json.loads(r.text)
 		if response['ok'] == True:
 			equipos_vivos.append(True)
 		else:
 			equipos_vivos.append(False)
 	except Exception as ex:
-		print("Parece ser que el servidor:",equipo_a_preguntar, "está muerto...")
+		print("Parece ser que el servidor:",equipo_a_preguntar['direccion'], "está muerto...")
 		equipos_vivos.append(False)
 
-def valida_nuevo_coordinador():
+def valida_nuevo_coordinador(tipo_coordinador):
 	# Cuando alguien me dice quién es su coordinador, yo valido quién es el de los demás
 	# Segunda parte del concenso... Elegir al que diga la mayoría
 	my_ip = get_ip(getPort=True)
 	my_address = my_ip['ip']#":"+str(my_ip['port'])
-	global voBos, address_direccion_server_tiempo
+	global voBos, address_direccion_server_tiempo, address_ar_primario
 	for equipo in prioridad_equipos:
 		if equipo['direccion'] == my_address:
 			continue
@@ -282,15 +286,24 @@ def valida_nuevo_coordinador():
 	solo_vivos = [x for x in equipos_vivos if x == True]
 	mayoria = (len(solo_vivos)//2)+1
 	if len(voBos)>mayoria:
-		#Obtiene el de mayor ocurrencia
-		print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
-		print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
-		address_direccion_server_tiempo = max( voBos, key=voBos.count )
-		print("--------------------------------")
-		print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
-		print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
+		if tipo_coordinador == "tiempo":
+			print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
+			print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
+			#Obtiene el de mayor ocurrencia
+			address_direccion_server_tiempo = max( voBos, key=voBos.count )
+			print("--------------------------------")
+			print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
+			print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
+		elif 'ar_' in tipo_coordinador:
+			print("Se cambiará por el concenso el resultado de AR_PRIMARIO, val actual:", address_ar_primario)
+			print("Se cambiará por el concenso el resultado de AR_PRIMARIO, val actual:", address_ar_primario)
+			#Obtiene el de mayor ocurrencia
+			address_ar_primario = max( voBos, key=voBos.count )
+			print("--------------------------------")
+			print("Nuevo valor por concenso para AR_PRIMARIO:", address_ar_primario)
+			print("Nuevo valor por concenso para AR_PRIMARIO:", address_ar_primario)
 	else:
-		print("Mayoria necesaria:", mayoria)
+		print("Mayoria necesaria para :", tipo_coordinador, "->",mayoria)
 		print("No se obtuvo mayoría:", voBos)
 		print("No se obtuvo mayoría:", voBos)
 
@@ -558,7 +571,7 @@ def valida_merecimiento():
 
 @app.route("/coordinacion/confirma-coordinador", methods=['POST'])
 def confirma_nuevo_coordinador():
-	global address_direccion_server_tiempo, caracter, address_to_forward
+	global address_direccion_server_tiempo, caracter, address_to_forward, address_ar_primario
 	data = request.json
 	
 	print("Me hizo la petición el host:\n",request.headers)
@@ -579,31 +592,37 @@ def confirma_nuevo_coordinador():
 		validaConcenso('tiempo')
 		return jsonify(ok=True, description={'server_changed':True, 'details':"Changed to {}".format(address_direccion_server_tiempo)})
 	elif data['tipo_servidor'] == 'ar_primario':
+		address_ar_primario = data['nuevo_coordinador']
 		caracter = "sumas_ar_secundario"
 		
 		validaConcenso(data['tipo_servidor'])
+		return jsonify(ok=True, description={'server_changed':True, 'details':"New AR_PRIMARIO changed to {}".format(address_ar_primario)})
 	else:
 		return jsonify(ok=False, description={'server_changed':False, 'details':"Servidor inesperado:{}".format(data['tipo_servidor'])})
 	# FALTA Switch para ahora pedir el tiempo al nuevo servidor
 	# elif data['tipo_servidor'] == 'coordinador':
 	# 	Switch para coordinador
 
-@app.route("/coordinacion/inicia-eleccion")
-def inicia_eleccion_coord():
-	global caracter
+@app.route("/coordinacion/inicia-eleccion/<tipo_coord>")
+def inicia_eleccion_coord(tipo_coord):
+	global caracter, address_ar_primario, hiloUtc, hiloTiempo
 	my_ip = get_ip(getPort=True)
 	my_address = my_ip['ip']#":"+str(my_ip['port'])
-	a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
+	a = iniciaEleccionNuevoCoordinador(tipo_coord, prioridad_equipos, my_address, MI_PRIORIDAD)
 	if a == True:
 		#Resultó este servidor elegido como coordinador
-		hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
-		hiloUtc.start()
-		caracter ='tiempo'
-		try:
-			hiloTiempo.join()
-		except Exception as ex:
-			pass
-		print("Trataré de romper el hilo")
+		if tipo_coord == 'tiempo':
+			hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
+			hiloUtc.start()
+			caracter ='tiempo'
+			try:
+				hiloTiempo.join()
+			except Exception as ex:
+				pass
+			print("Trataré de romper el hilo")
+		elif "ar_" in tipo_coord :
+			address_ar_primario = get_ip()
+			caracter = "ar_primario"
 	else:
 		try:
 			hiloUtc.do_run = False
@@ -611,7 +630,11 @@ def inicia_eleccion_coord():
 		except Exception as ex:
 			#print(ex)
 			pass
-	return jsonify(ok=True, caracter=caracter)
+	if tipo_coord == 'tiempo':
+		new_coord = address_direccion_server_tiempo
+	elif 'ar_' in tipo_coord:
+		new_coord = address_ar_primario
+	return jsonify(ok=True, description={'caracter':caracter, 'tipo_coordinacion':tipo_coord, 'nuevo_coordinador':new_coord})
 	#return flask.redirect("/", code=302)
 
 @app.route("/get-caracter")
@@ -633,7 +656,7 @@ def checkNewCoordinator():
 	global voBos
 	data = request.json
 	voBos.append( data['my_coordinator'] )
-	valida_nuevo_coordinador(  )
+	valida_nuevo_coordinador( data['type'] )
 	return jsonify(ok=True, description= 'Coordinator received: {}'.format(data['my_coordinator']) )
 
 
@@ -646,7 +669,7 @@ Fin Concenso
 Para Frontends:
 '''
 
-@app.route("/coordinacion/get-coordinator", methods=['POST'])
+@app.route("/coordinacion/get-coordinator")
 def getCoordinator():
 	return jsonify(ok=True, description={'address_ar_primario':address_ar_primario})
 
@@ -675,7 +698,7 @@ if __name__ == "__main__":
 
 	voBos = [None]*len(prioridad_equipos)
 	puertoServer = env['puerto']
-	database = env['database']
+	database = env['database']['name']
 	
 	for a in range(0, len(resultados)):
 		resultados[a] = {'idJugador': a, 'suma':'-'}
