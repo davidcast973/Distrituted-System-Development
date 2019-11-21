@@ -44,7 +44,7 @@ prioridad_equipos = []
 voBos = []
 equipos_vivos = []
 intentos_get_hora = 0
-address_direccion_server_tiempo = envGral['server_clock_1']['location']+":"+str(envGral['server_clock_1']['puerto'])
+address_direccion_server_tiempo = envGral['server_clock_1']['location']#+":"+str(envGral['server_clock_1']['puerto'])
 address_to_forward = ""
 
 #hiloTiempo = ""
@@ -68,6 +68,9 @@ def obtenUTCTime():
 	global relojes
 	t = threading.currentThread()
 	while getattr(t, "do_run", True):
+		print("Pediré hora al servidor NTP")
+		print("Pediré hora al servidor NTP")
+		print("Pediré hora al servidor NTP")
 		#c = ntplib.NTPClient()
 		# Provide the respective ntp server ip in below function
 
@@ -108,7 +111,7 @@ def am_i_a_sum_server():
 
 
 def verificaHoraServerTime():
-	global intentos_get_hora, caracter, hiloTiempo
+	global intentos_get_hora, caracter, hiloTiempo, hiloUtc
 	host_ip = get_ip()
 	#print("Socket name info:",host_ip)
 
@@ -142,10 +145,9 @@ def verificaHoraServerTime():
 			if intentos_get_hora >= INTENTOS_MAX_GET_HORA and caracter == 'sumas':
 				#INICIA PROCESO DE ELECCION
 				my_ip = get_ip(getPort=True)
-				my_address = my_ip['ip']+":"+str(my_ip['port'])
+				my_address = my_ip['ip']#+":"+str(my_ip['port'])
 				a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
 				if a == True:
-					print("Ahora seré un servidor de TIEMPO!")
 					print("Ahora seré un servidor de TIEMPO!")
 					print("Ahora seré un servidor de TIEMPO!")
 					hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
@@ -153,26 +155,20 @@ def verificaHoraServerTime():
 					caracter ='tiempo'
 					print("Valor de caracter:", caracter)
 					print("Valor de caracter:", caracter)
-					print("Valor de caracter:", caracter)
-					try:
-						hiloTiempo.do_run = False
-						#hiloTiempo.join()
-					except Exception as ex:
-						print("Excepción al tratar de matar hiloTiempo", ex, ":::::::::::::")
-						pass
-					print("Trataré de romper el hilo de obtención de hora verificaHoraServerTime")
+					hiloTiempo.do_run = False
+					#print("Trataré de romper el hilo de obtención de hora verificaHoraServerTime")
 					if numeroServidor == 1:
 						address_to_forward = envGral['server_2']['location']+":"+str(envGral['server_2']['puerto'])
 					else:
 						address_to_forward = envGral['server_1']['location']+":"+str(envGral['server_1']['puerto'])
-					return True
+					#return True
 				else:
 					try:
 						hiloUtc.do_run = False
 						hiloTiempo.do_run = True
 						#hiloUtc.join()
 					except Exception as ex:
-						print("Excepción al tratar de matar hiloUtc", ex, ":::::::::::::")
+						#print("Excepción al tratar de matar hiloUtc", ex, ":::::::::::::")
 						pass
 
 			time.sleep(10)
@@ -222,7 +218,7 @@ def validaConcenso():
 	# Luego esta se encarga de comunicarle a todos quién es cu coordinador
 	# 
 	my_ip = get_ip(getPort=True)
-	my_address = my_ip['ip']+":"+str(my_ip['port'])
+	my_address = my_ip['ip']#+":"+str(my_ip['port'])
 
 	global voBos
 	voBos = []
@@ -269,8 +265,8 @@ def valida_nuevo_coordinador():
 	# Cuando alguien me dice quién es su coordinador, yo valido quién es el de los demás
 	# Segunda parte del concenso... Elegir al que diga la mayoría
 	my_ip = get_ip(getPort=True)
-	my_address = my_ip['ip']+":"+str(my_ip['port'])
-	global voBos, address_direccion_server_tiempo
+	my_address = my_ip['ip']#+":"+str(my_ip['port'])
+	global voBos, address_direccion_server_tiempo, caracter,hiloUtc,hiloTiempo
 	for equipo in prioridad_equipos:
 		if equipo['direccion'] == my_address:
 			continue
@@ -281,18 +277,31 @@ def valida_nuevo_coordinador():
 	#De todos los servidores, los que en verdad hayan dado señales de vida
 	solo_vivos = [x for x in equipos_vivos if x == True]
 	mayoria = (len(solo_vivos)//2)+1
-	if len(voBos)>mayoria:
+	
+	if len(voBos)>=mayoria:
 		#Obtiene el de mayor ocurrencia
-		print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
 		print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
 		print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
 		address_direccion_server_tiempo = max( voBos, key=voBos.count )
 		print("--------------------------------")
 		print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
 		print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
-		print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
+		if address_direccion_server_tiempo == get_ip():
+			caracter = 'tiempo'
+			try:
+				hiloUtc.do_run = True
+				hiloTiempo.do_run = False
+			except Exception as ex:
+				print("Excepción en concenso:", ex)
+		else:
+			caracter = 'sumas'
+			try:
+				hiloUtc.do_run = False
+				hiloTiempo.do_run = True
+			except Exception as ex:
+				print("Excepción en concenso:", ex)
 	else:
-		print("No se obtuvo mayoría:", voBos)
+		print("Mayoría necesaria:", mayoria)
 		print("No se obtuvo mayoría:", voBos)
 		print("No se obtuvo mayoría:", voBos)
 
@@ -547,7 +556,7 @@ def valida_merecimiento():
 
 	if data['prioridad'] < MI_PRIORIDAD:
 		my_ip = get_ip(getPort=True)
-		my_address = my_ip['ip']+":"+str(my_ip['port'])
+		my_address = my_ip['ip']#+":"+str(my_ip['port'])
 		h = threading.Thread(target=iniciaEleccionNuevoCoordinador, name="Inicia nueva eleccion", args=(data['tipo_servidor'] , prioridad_equipos, my_address, MI_PRIORIDAD,) )
 		h.start()
 		return jsonify(ok=True, description={'accepted':False})
@@ -584,9 +593,9 @@ def confirma_nuevo_coordinador():
 
 @app.route("/coordinacion/inicia-eleccion")
 def inicia_eleccion_coord():
-	global caracter
+	global caracter, hiloTiempo, hiloUtc
 	my_ip = get_ip(getPort=True)
-	my_address = my_ip['ip']+":"+str(my_ip['port'])
+	my_address = my_ip['ip']#+":"+str(my_ip['port'])
 	a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
 	if a == True:
 		#Resultó este servidor elegido como coordinador

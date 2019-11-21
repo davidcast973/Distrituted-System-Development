@@ -42,7 +42,7 @@ def avisa_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP, myPriority, lo
 def confirma_soy_nuevo_coordinador(tipoServer, equipo_destino, myIP):
 	global respuestas
 	url_confirma_coord = "/coordinacion/confirma-coordinador"
-	print("Se va a setear al nuevo coordinador ubicado en:", myIP)
+	#print("Se va a setear al nuevo coordinador ubicado en:", myIP)
 	datos = {
 		'nuevo_coordinador' : myIP,
 		'tipo_servidor': tipoServer
@@ -66,15 +66,15 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 	Retornará Falso si queda como servidor de sumas
 	"""
 	global respuestas, hiloUtc
-	print("Estoy iniciando proceso de elección")
+	#print("Estoy iniciando proceso de elección")
 	respuestas = [None]*len(prioridadEquipos)
 	a = 0
 	for equipo in prioridadEquipos:
 		if equipo['direccion'] == myIP:
-			print("Estoy haciendo skip para avisar :", equipo)
-			print("Estoy haciendo skip para avisar :", equipo)
+			#print("Estoy haciendo skip para avisar :", equipo)
+			#print("Estoy haciendo skip para avisar :", equipo)
 			
-		# 	continue
+			continue
 		if equipo['prioridad']>myPriority:
 			#print("Le voy a avisar a {}, que quiero ser el coordinador".format(equipo))
 			print("Iniciando hilo para avisarles")
@@ -91,10 +91,10 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 		for equipo in prioridadEquipos:
 			#print("Le estoy confirmando a {}, que seré el coordinador".format(equipo))
 			if equipo['direccion'] == myIP:
-				print("Estoy haciendo skip de mi dirección:", equipo)
-				print("Estoy haciendo skip de mi dirección:", equipo)
+				#print("Estoy haciendo skip de mi dirección:", equipo)
+				#print("Estoy haciendo skip de mi dirección:", equipo)
 				
-			#	continue
+				continue
 			#Le avisa a todo mundo que él es el nuevo coordinador
 			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo, myIP) ) 
 			h.start()
