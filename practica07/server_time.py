@@ -123,6 +123,16 @@ def obtieneTiempoUTC():
 
 	return jsonify(ok=True, description={"UTC-time":response_utc_time, "ajuste":secondsSumaFinal})
 
+
+@app.route("/time/prueba-timing-time", methods=['POST'])
+def pruebaDeReboteParaTiming():
+	return jsonify(ok=True, description="Eco for timing")
+
+@app.route("/coordinacion/confirma-coordinador", methods=['POST'])
+def confirma_nuevo_coordinador():
+	data = request.json
+	return jsonify(ok=True, description={'server_changed':False, 'details':"Servidor inesperado:{}".format(data['tipo_servidor'])})
+
 def obtenUTCTime():
 	 while True:
 		  #c = ntplib.NTPClient()

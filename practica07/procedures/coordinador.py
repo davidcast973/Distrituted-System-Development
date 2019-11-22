@@ -79,9 +79,7 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 		if equipo['prioridad']>myPriority:
 			#print("Le voy a avisar a {}, que quiero ser el coordinador".format(equipo))
 			print("Iniciando hilo para avisarles")
-			h = threading.Thread(target=avisa_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo,myIP,myPriority,a) ) 
-			h.start()
-			h.join()
+			avisa_soy_nuevo_coordinador(tipoServer, equipo,myIP,myPriority,a)
 		a+=1
 		
 	print("Valor de las respuestas de los demás para Bully:",respuestas)
@@ -91,15 +89,13 @@ def iniciaEleccionNuevoCoordinador( tipoServer , prioridadEquipos, myIP, myPrior
 	else:
 		for equipo in prioridadEquipos:
 			#print("Le estoy confirmando a {}, que seré el coordinador".format(equipo))
-			if equipo['direccion'] == myIP:
-				print("Estoy haciendo skip de mi dirección:", equipo)
-				print("Estoy haciendo skip de mi dirección:", equipo)
-				
-				continue
+			#if equipo['direccion'] == myIP:
+			#	print("Estoy haciendo skip de mi dirección:", equipo)
+			#	print("Estoy haciendo skip de mi dirección:", equipo)
+			#	
+			#	continue
 			#Le avisa a todo mundo que él es el nuevo coordinador
-			h = threading.Thread(target=confirma_soy_nuevo_coordinador, name="Avisa nuevo coord", args=(tipoServer, equipo, myIP) ) 
-			h.start()
-			h.join()
+			confirma_soy_nuevo_coordinador(tipoServer, equipo, myIP) 
 		return True
 
 def allowed_file(filename):
@@ -138,7 +134,7 @@ def guardaEnBd(ip_origen, numeroServer, suma, relojObject, nombreEquipo, dbName=
 
 	datetimeServer += str(relojObject.hora)+":"+str(relojObject.mins)+":"+str(relojObject.segs)
 
-	bd = connectToBd(dbName=dbName['name'])
+	bd = connectToBd(dbName=dbName)
 
 	a = bd.doQuery("""
 	INSERT INTO resultados_envios(date_added, ip_origen, nombre_equipo, num_jugador, resultado_suma) 
@@ -151,7 +147,17 @@ def guardaEnBd(ip_origen, numeroServer, suma, relojObject, nombreEquipo, dbName=
 	return resultado
 
 def send_to_others_servers(ip_origen, numeroServer, suma, nombreEquipoOrigen, servidor_destino):
+	my_address = get_ip()
 	destino = servidor_destino['direccion']
+
+	url_destino = "http://"+destino+"/numeros/save-result-peer"
+
+	print("Replicando a:", url_destino)
+	print("Replicando a:", url_destino)
+	print("Replicando a:", url_destino)
+
+	if destino == my_address:
+		return True
 	data_to_send = {
 		'ip_origin' : ip_origen,
 		'num_jugador_origin' : numeroServer,
@@ -159,7 +165,7 @@ def send_to_others_servers(ip_origen, numeroServer, suma, nombreEquipoOrigen, se
 		'nombre_equipo_origin' : nombreEquipoOrigen
 	}
 	try:
-		r = requests.post("http://"+destino+"/numeros/save-result-peer", json=data_to_send)
+		r = requests.post(url_destino, json=data_to_send)
 		response = json.loads(r.text)
 		ack_replicaciones.append( response['ok'] )
 	except Exception as ex:
@@ -184,9 +190,10 @@ def connectToBd(dbName=None):
 	bd_name=dbName
 	#if dbName is None:
 	#	bd_name = "resguardo_sumas_1"
+	server_bd = "10.100.76.126"
 
 	return Bd(	
-		hostname = "10.100.69.234",
+		hostname = server_bd,
 		username = "root",
 		password = "12345",
 		database = bd_name

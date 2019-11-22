@@ -11,11 +11,11 @@
         "puerto" : 80,
         "database" : {
             "name": "resguardo_sumas_1",
-            "server": "10.100.70.115",
+            "server": "10.100.77.215",
             "user": "root",
             "password": "12345"
         },
-        "location" : "10.100.74.49",
+        "location" : "10.100.77.215",
         "send_to" : "10.100.66.166",
         "priority" : 1,
         "type" : "ar_primario"
@@ -31,7 +31,7 @@
         },
         "location" : "10.100.66.166",
         "send_to" : "10.100.74.49",
-        "priority" : 2,
+        "priority" : 10,
         "type" : "ar_secundario"
     },
     "server_3":{
@@ -43,9 +43,9 @@
             "user": "root",
             "password": "12345"
         },
-        "location" : "10.100.74.65",
+        "location" : "10.100.77.217",
         "send_to" : "localhost:80",
-        "priority" : 50,
+        "priority" : 3,
         "type" : "ar_secundario"
     },
     "server_clock_1":{

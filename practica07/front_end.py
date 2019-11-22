@@ -165,7 +165,7 @@ def remueveArchivoRecibido(archivo, sinuso):
 def get_AR_primario(envGral):
 	equipos = []
 	ar_prim = ""
-
+	
 	for equipo in envGral:
 		if 'server_' in equipo:
 			equipos.append( envGral[equipo]['location'] )
@@ -182,11 +182,16 @@ def get_AR_primario(envGral):
 	return {'ar_primario':ar_prim, 'all_ars':equipos}
 
 def inicia_eleccion_nuevo_ar_primario(equipos_ar, envGral):
-	aleatorio = random.randint(0, len(equipos_ar)-1)
-	r = requests.get("http://"+ equipos_ar[aleatorio] +"/coordinacion/inicia-eleccion/ar_primario" )
-	response = json.loads( r.text )
-	#nuevo_coordinador = response['description']['nuevo_coordinador']
-	todos_los_ars = get_AR_primario( envGral )
+	for a in range(0,5):
+		aleatorio = random.randint(0, len(equipos_ar)-1)
+		try:
+			r = requests.get("http://"+ equipos_ar[aleatorio] +"/coordinacion/inicia-eleccion/ar_primario" )
+			response = json.loads( r.text )
+			#nuevo_coordinador = response['description']['nuevo_coordinador']
+			todos_los_ars = get_AR_primario( envGral )
+		except Exception as ex:
+			pass
+	
 	return todos_los_ars['ar_primario']
 
 if __name__ == "__main__":
