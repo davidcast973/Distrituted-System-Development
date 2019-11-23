@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<title>P#3.1 - Coordinador</title>
+<title>Práctica #2.1</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="{{ url_for('static', filename='w3.css') }}">
 <script
@@ -9,11 +9,9 @@
   crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-{% if servidor == 1 %}
-    <script src="{{url_for('static', filename='./js/infoHiloMaestro.js')}}"></script>
-{% else %}
-    <script src="{{url_for('static', filename='./js/infoHiloMaestro2.js')}}"></script>
-{% endif %}
+
+    <script src="{{url_for('static', filename='./js/infoHiloTime.js')}}"></script>
+
 <head>
 </head>
 
@@ -21,11 +19,11 @@
 <body style="background-image: url({{ url_for('static', filename='img/background1.png') }})">
 
 <div class="w3-container">
-  <h2>Práctica 1 - Tercer periodo</h2>
+  <h2>Práctica 3 - Segundo periodo</h2>
 
   <div class="w3-card-4 w3-display-topmiddle" style="width:40%; top:70px;">
     <header class="w3-container w3-blue w3-center">
-        <h1>Servidor coordinador {{servidor}}</h1>
+        <h1>Servidor de Tiempo </h1>
     </header>
     <!--img src="img_snowtops.jpg" alt="Alps" style="width:100%"-->
     <div class="w3-container w3-white">
@@ -42,24 +40,6 @@
             </div>
             <div class="w3-col s4 w3-button w3-center" id="subs1" onclick="sub1()">
                 <h4><i class="material-icons">fast_rewind</i></h4>
-            </div>
-
-        </div>     
-    </div>
-
-  </div>
-
-    
-  <div class="w3-card-4 w3-display-bottommiddle" style="width:30%; bottom:70px;">
-    <header class="w3-container w3-deep-purple w3-center">
-        <h1>Jugador {{servidor}}</h1>
-    </header>
-    <!--img src="img_snowtops.jpg" alt="Alps" style="width:100%"-->
-    <div class="w3-container w3-white">
-        <div class="w3-row">
-           
-            <div class="w3-col w3-center" style="border:1px solid;">
-                <h4 id="sumJ{{servidor-1}}">-</h4>
             </div>
 
         </div>     

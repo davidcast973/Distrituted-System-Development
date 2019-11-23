@@ -16,9 +16,9 @@ import ntplib
 sys.path.append("./../")
 
 #Includes de práctica:
-from practica06.classes.Reloj import Reloj
-from practica06.procedures.timeServ import *
-from practica06.procedures.coordinador import *
+from practica07.classes.Reloj import Reloj
+from practica07.procedures.timeServ import *
+from practica07.procedures.coordinador import *
 
 UPLOAD_FOLDER = './static/uploads/coordinador'
 INTENTOS_MAX_GET_HORA = 2
@@ -44,12 +44,13 @@ prioridad_equipos = []
 voBos = []
 equipos_vivos = []
 intentos_get_hora = 0
-address_direccion_server_tiempo = envGral['server_clock_1']['location']#+":"+str(envGral['server_clock_1']['puerto'])
+address_direccion_server_tiempo = envGral['server_clock_1']['location']#":"+str(envGral['server_clock_1']['puerto'])
 address_to_forward = ""
+#address_ar_primario = ""
 
 #hiloTiempo = ""
 
-caracter="sumas"
+caracter= env['type']
 
 '''
 ----------------------------------------------------------------
@@ -68,9 +69,6 @@ def obtenUTCTime():
 	global relojes
 	t = threading.currentThread()
 	while getattr(t, "do_run", True):
-		print("Pediré hora al servidor NTP")
-		print("Pediré hora al servidor NTP")
-		print("Pediré hora al servidor NTP")
 		#c = ntplib.NTPClient()
 		# Provide the respective ntp server ip in below function
 
@@ -104,14 +102,14 @@ def forward_to_sum_server(full_path):
 	return flask.redirect("http://{}/{}".format(address_to_forward, full_path), code=307)
 
 def am_i_a_sum_server():
-	if caracter == 'sumas':
+	if caracter in ['sumas','ar_primario', 'ar_secundario']:
 		return True
 	return False
 
 
 
 def verificaHoraServerTime():
-	global intentos_get_hora, caracter, hiloTiempo, hiloUtc
+	global intentos_get_hora, caracter, hiloTiempo
 	host_ip = get_ip()
 	#print("Socket name info:",host_ip)
 
@@ -133,7 +131,7 @@ def verificaHoraServerTime():
 		
 		aux = ""
 		try:
-			print("Estoy pidiendo la nueva hora a:", address_direccion_server_tiempo)
+			#print("Estoy pidiendo la nueva hora a:", address_direccion_server_tiempo)
 			r = requests.post("http://{}/time/get-current-time/".format(address_direccion_server_tiempo), json=detalles_servidor)
 			aux = r
 			json_resp = json.loads(r.text)
@@ -145,7 +143,7 @@ def verificaHoraServerTime():
 			if intentos_get_hora >= INTENTOS_MAX_GET_HORA and caracter == 'sumas':
 				#INICIA PROCESO DE ELECCION
 				my_ip = get_ip(getPort=True)
-				my_address = my_ip['ip']#+":"+str(my_ip['port'])
+				my_address = my_ip['ip']#":"+str(my_ip['port'])
 				a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
 				if a == True:
 					print("Ahora seré un servidor de TIEMPO!")
@@ -155,23 +153,28 @@ def verificaHoraServerTime():
 					caracter ='tiempo'
 					print("Valor de caracter:", caracter)
 					print("Valor de caracter:", caracter)
-					hiloTiempo.do_run = False
-					#print("Trataré de romper el hilo de obtención de hora verificaHoraServerTime")
+					try:
+						hiloTiempo.do_run = False
+						#hiloTiempo.join()
+					except Exception as ex:
+						print("Excepción al tratar de matar hiloTiempo", ex, ":::::::::::::")
+						pass
+					print("Trataré de romper el hilo de obtención de hora verificaHoraServerTime")
 					if numeroServidor == 1:
-						address_to_forward = envGral['server_2']['location']+":"+str(envGral['server_2']['puerto'])
+						address_to_forward = envGral['server_2']['location']#":"+str(envGral['server_2']['puerto'])
 					else:
-						address_to_forward = envGral['server_1']['location']+":"+str(envGral['server_1']['puerto'])
-					#return True
+						address_to_forward = envGral['server_1']['location']#":"+str(envGral['server_1']['puerto'])
+					return True
 				else:
 					try:
 						hiloUtc.do_run = False
 						hiloTiempo.do_run = True
 						#hiloUtc.join()
 					except Exception as ex:
-						#print("Excepción al tratar de matar hiloUtc", ex, ":::::::::::::")
+						print("Excepción al tratar de matar hiloUtc", ex, ":::::::::::::")
 						pass
 
-			time.sleep(10)
+			time.sleep(20)
 
 			continue
 		if json_resp['ok'] == True:
@@ -199,7 +202,7 @@ def verificaHoraServerTime():
 				print("Va a ralentizar")
 				
 				relojes[0].ritmo += 5
-		time.sleep(10)
+		time.sleep(20)
 
 '''
 ------------------------------------------
@@ -212,29 +215,30 @@ def verificaHoraServerTime():
 Funciones concenso:
 '''
 
-def validaConcenso():
+def validaConcenso(tipo_coordinador):
 	# Al momento de confirmar un coordinador, se manda a llamar a esta llamada.
 	# Primera parte del concenso... Decirle a todos quién es mi coordinador
 	# Luego esta se encarga de comunicarle a todos quién es cu coordinador
 	# 
 	my_ip = get_ip(getPort=True)
-	my_address = my_ip['ip']#+":"+str(my_ip['port'])
+	my_address = my_ip['ip']#":"+str(my_ip['port'])
 
 	global voBos
 	voBos = []
 	for equipo in prioridad_equipos:
-		if equipo['direccion'] == my_address:
-			continue
-		share_coordinator = threading.Thread(target=comunicaCoordinador, name="Hilo que va preguntando quién es el coord de cada equipo", args=(equipo,))
-		share_coordinator.start()
-		share_coordinator.join()
+		#if equipo['direccion'] == my_address:
+		#	continue
+		comunicaCoordinador(equipo,tipo_coordinador)
 
-def comunicaCoordinador( equipo_a_preguntar ):
-	global voBos
+def comunicaCoordinador( equipo_a_preguntar, tipo_coordinador="tiempo"):
 	ruta = "/coordinacion/tell-me-your-coordinator"
 	datos = {
-		'my_coordinator':address_direccion_server_tiempo
+		'type' : tipo_coordinador,
 	}
+	if tipo_coordinador == 'tiempo':
+		datos['my_coordinator']=address_direccion_server_tiempo
+	elif 'ar_' in tipo_coordinador:
+		datos['my_coordinator']=address_ar_primario
 	try:
 		r = requests.post("http://"+equipo_a_preguntar['direccion']+ruta, json=datos)
 		response = json.loads(r.text)
@@ -251,22 +255,23 @@ def pingCheckServersAlive(equipo_a_preguntar):
 	equipos_vivos = []
 	ruta_ping = "/time/prueba-timing-time"
 	try:
-		r = requests.post("http://"+equipo_a_preguntar+ruta_ping)
+		print("Viendo si el equipo >{}< está vivo...".format(equipo_a_preguntar['direccion']))
+		r = requests.post("http://"+equipo_a_preguntar['direccion']+ruta_ping)
 		response = json.loads(r.text)
 		if response['ok'] == True:
 			equipos_vivos.append(True)
 		else:
 			equipos_vivos.append(False)
 	except Exception as ex:
-		print("Parece ser que el servidor:",equipo_a_preguntar, "está muerto...")
+		print("Parece ser que el servidor:",equipo_a_preguntar['direccion'], "está muerto...")
 		equipos_vivos.append(False)
 
-def valida_nuevo_coordinador():
+def valida_nuevo_coordinador(tipo_coordinador):
 	# Cuando alguien me dice quién es su coordinador, yo valido quién es el de los demás
 	# Segunda parte del concenso... Elegir al que diga la mayoría
 	my_ip = get_ip(getPort=True)
-	my_address = my_ip['ip']#+":"+str(my_ip['port'])
-	global voBos, address_direccion_server_tiempo, caracter,hiloUtc,hiloTiempo
+	my_address = my_ip['ip']#":"+str(my_ip['port'])
+	global voBos, address_direccion_server_tiempo, address_ar_primario
 	for equipo in prioridad_equipos:
 		if equipo['direccion'] == my_address:
 			continue
@@ -277,31 +282,27 @@ def valida_nuevo_coordinador():
 	#De todos los servidores, los que en verdad hayan dado señales de vida
 	solo_vivos = [x for x in equipos_vivos if x == True]
 	mayoria = (len(solo_vivos)//2)+1
-	
 	if len(voBos)>=mayoria:
-		#Obtiene el de mayor ocurrencia
-		print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
-		print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
-		address_direccion_server_tiempo = max( voBos, key=voBos.count )
-		print("--------------------------------")
-		print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
-		print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
-		if address_direccion_server_tiempo == get_ip():
-			caracter = 'tiempo'
-			try:
-				hiloUtc.do_run = True
-				hiloTiempo.do_run = False
-			except Exception as ex:
-				print("Excepción en concenso:", ex)
-		else:
-			caracter = 'sumas'
-			try:
-				hiloUtc.do_run = False
-				hiloTiempo.do_run = True
-			except Exception as ex:
-				print("Excepción en concenso:", ex)
+		if tipo_coordinador == "tiempo":
+			print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
+			print("Se cambiará por el concenso el resultado de address_direccion_server_tiempo, val actual:", address_direccion_server_tiempo)
+			#Obtiene el de mayor ocurrencia
+			address_direccion_server_tiempo = max( voBos, key=voBos.count )
+			print("--------------------------------")
+			print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
+			print("Nuevo valor por concenso para server tiempo:", address_direccion_server_tiempo)
+		elif 'ar_' in tipo_coordinador:
+			print("Se cambiará por el concenso el resultado de AR_PRIMARIO, val actual:", address_ar_primario)
+			print("Se cambiará por el concenso el resultado de AR_PRIMARIO, val actual:", address_ar_primario)
+			#Obtiene el de mayor ocurrencia
+			voBos = [x for x in voBos if x is not None]
+			address_ar_primario = max( voBos, key=voBos.count )
+			print("VoBos:", voBos)
+			print("--------------------------------")
+			print("Nuevo valor por concenso para AR_PRIMARIO:", address_ar_primario)
+			print("Nuevo valor por concenso para AR_PRIMARIO:", address_ar_primario)
 	else:
-		print("Mayoría necesaria:", mayoria)
+		print("Mayoria necesaria para :", tipo_coordinador, "->",mayoria)
 		print("No se obtuvo mayoría:", voBos)
 		print("No se obtuvo mayoría:", voBos)
 
@@ -406,8 +407,8 @@ def cambiaRitmo(idReloj, opcion):
 #Esta ruta/función, será la que recibirá los archivos de los jugadores
 @app.route("/numeros/save-sum-numbers", methods=['POST'])
 def saveSumNumbers():
-	if am_i_a_sum_server() == False:
-		return forward_to_sum_server(request.full_path)
+	#if am_i_a_sum_server() == False:
+	#	return forward_to_sum_server(request.full_path)
 	response = {'ok':False, 'description':"Check on the console :D"}
 	formReq = request.form
 	numeroServer = formReq.get('servidor',-1)
@@ -423,15 +424,18 @@ def saveSumNumbers():
 		suma = sum(listaNums)
 
 		print("Hará hilo...")
-		hilo = threading.Thread(target=sendResultToOtherServer, name="Hilo_envio_datos_server", args=(ip_origen, numeroServer, suma, nombreEquipoOrigen))
-		hilo.start()
-		hilo.join()
+		acks = sendResultToOtherServer(ip_origen, numeroServer, suma, nombreEquipoOrigen, prioridad_equipos)
+
+		#hilo = threading.Thread(target=sendResultToOtherServer, name="Hilo_envio_datos_server", args=(ip_origen, numeroServer, suma, nombreEquipoOrigen))
+		#hilo.start()
+		#hilo.join()
 		print("Se supone que terminó hilo...")
 
-		resultados[int(numeroServer)-1]['suma'] = suma
+		resultados[ (numeroServidor)-1 ]['suma'] = suma
 		#print("SE cambiaron los numeros:", resultados[int(numeroServer)-1])
 		guardado = guardaEnBd( ip_origen, numeroServer, suma, relojes[0], nombreEquipoOrigen, dbName=database)
 		
+		guardado['ok'] = acks
 
 		return jsonify( guardado )
 	else:
@@ -439,15 +443,19 @@ def saveSumNumbers():
 
 @app.route("/numeros/save-result-peer", methods=["POST"])
 def guardaResultadoOtroServidor():
-	if am_i_a_sum_server() == False:
-		return forward_to_sum_server(request.full_path)
-
 	datos = request.json
 	
 	ip_origen = datos['ip_origin']
 	numeroServer = datos['num_jugador_origin'] 
 	suma = datos['resultado_suma']
 	nombreEquipoOrigen = datos['nombre_equipo_origin']
+	resultados[ (numeroServidor)-1 ]['suma'] = suma
+	print("Arreglo de resultados!", resultados)
+	print("Arreglo de resultados!", resultados)
+	print("Arreglo de resultados!", resultados)
+	print("Arreglo de resultados!", resultados)
+	print("Arreglo de resultados!", resultados)
+	print("Arreglo de resultados!", resultados)
 	guardado = guardaEnBd( ip_origen, numeroServer, suma, relojes[0], nombreEquipoOrigen, dbName=database)
 
 	return jsonify( guardado )
@@ -455,9 +463,6 @@ def guardaResultadoOtroServidor():
 
 @app.route("/numeros/getResultOf/<int:idJugador>", methods=['GET'])
 def exponeSumaDeJugador(idJugador):
-	if am_i_a_sum_server() == False:
-		return forward_to_sum_server(request.full_path)
-
 	if idJugador in [0,1,2]:
 		return jsonify(ok=True, description=resultados[idJugador])
 	else:
@@ -556,7 +561,7 @@ def valida_merecimiento():
 
 	if data['prioridad'] < MI_PRIORIDAD:
 		my_ip = get_ip(getPort=True)
-		my_address = my_ip['ip']#+":"+str(my_ip['port'])
+		my_address = my_ip['ip']#":"+str(my_ip['port'])
 		h = threading.Thread(target=iniciaEleccionNuevoCoordinador, name="Inicia nueva eleccion", args=(data['tipo_servidor'] , prioridad_equipos, my_address, MI_PRIORIDAD,) )
 		h.start()
 		return jsonify(ok=True, description={'accepted':False})
@@ -566,55 +571,66 @@ def valida_merecimiento():
 
 @app.route("/coordinacion/confirma-coordinador", methods=['POST'])
 def confirma_nuevo_coordinador():
-	global address_direccion_server_tiempo, caracter, address_to_forward
+	global address_direccion_server_tiempo, caracter, address_to_forward, address_ar_primario
 	data = request.json
 	
 	print("Me hizo la petición el host:\n",request.headers)
 	print("......................................................")
-	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
-	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
-	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data)
+	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data, " De tipo:",data['tipo_servidor'])
+	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data, " De tipo:",data['tipo_servidor'])
+	print("YA ME AVISARON QUE HAY UN NUEVO COORDINADOR:", data, " De tipo:",data['tipo_servidor'])
+	
 	if data['tipo_servidor'] == 'tiempo':
 		address_direccion_server_tiempo = data['nuevo_coordinador']
 		print("La nueva dirección del servidor de tiempo:\n", address_direccion_server_tiempo)
 		print("--------------------------------------------------------------------------------------")
 		caracter = "sumas"
 		
-		#hiloTiempo = threading.Thread(target=verificaHoraServerTime, name="Estabiliza tiempo")
-		#hiloTiempo.start()
 		hiloTiempo.do_run = True
-		validaConcenso()
+		validaConcenso('tiempo')
 		return jsonify(ok=True, description={'server_changed':True, 'details':"Changed to {}".format(address_direccion_server_tiempo)})
+	elif data['tipo_servidor'] == 'ar_primario':
+		address_ar_primario = data['nuevo_coordinador']
+		caracter = "sumas_ar_secundario"
+		
+		validaConcenso(data['tipo_servidor'])
+		return jsonify(ok=True, description={'server_changed':True, 'details':"New AR_PRIMARIO changed to {}".format(address_ar_primario)})
 	else:
 		return jsonify(ok=False, description={'server_changed':False, 'details':"Servidor inesperado:{}".format(data['tipo_servidor'])})
 	# FALTA Switch para ahora pedir el tiempo al nuevo servidor
 	# elif data['tipo_servidor'] == 'coordinador':
 	# 	Switch para coordinador
 
-@app.route("/coordinacion/inicia-eleccion")
-def inicia_eleccion_coord():
-	global caracter, hiloTiempo, hiloUtc
+@app.route("/coordinacion/inicia-eleccion/<tipo_coord>")
+def inicia_eleccion_coord(tipo_coord):
+	global caracter, address_ar_primario, hiloUtc, hiloTiempo
 	my_ip = get_ip(getPort=True)
-	my_address = my_ip['ip']#+":"+str(my_ip['port'])
-	a = iniciaEleccionNuevoCoordinador('tiempo', prioridad_equipos, my_address, MI_PRIORIDAD)
+	my_address = my_ip['ip']#":"+str(my_ip['port'])
+	a = iniciaEleccionNuevoCoordinador(tipo_coord, prioridad_equipos, my_address, MI_PRIORIDAD)
 	if a == True:
 		#Resultó este servidor elegido como coordinador
-		hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
-		hiloUtc.start()
-		caracter ='tiempo'
-		try:
-			hiloTiempo.join()
-		except Exception as ex:
-			pass
-		print("Trataré de romper el hilo")
+		if tipo_coord == 'tiempo':
+			hiloUtc = threading.Thread(target=obtenUTCTime, name="Obtiene hora de UTC Server")
+			hiloUtc.start()
+			caracter ='tiempo'
+			try:
+				hiloTiempo.join()
+			except Exception as ex:
+				pass
+			print("Trataré de romper el hilo")
+		elif "ar_" in tipo_coord :
+			address_ar_primario = get_ip()
+			caracter = "ar_primario"
 	else:
+		time.sleep(1)
 		try:
 			hiloUtc.do_run = False
 			hiloTiempo.do_run = True
+			caracter = "ar_secundario"
 		except Exception as ex:
 			#print(ex)
 			pass
-	return jsonify(ok=True, caracter=caracter)
+	return jsonify(ok=True, description={'caracter':caracter, 'tipo_coordinacion':tipo_coord})
 	#return flask.redirect("/", code=302)
 
 @app.route("/get-caracter")
@@ -636,8 +652,22 @@ def checkNewCoordinator():
 	global voBos
 	data = request.json
 	voBos.append( data['my_coordinator'] )
-	valida_nuevo_coordinador(  )
+	valida_nuevo_coordinador( data['type'] )
 	return jsonify(ok=True, description= 'Coordinator received: {}'.format(data['my_coordinator']) )
+
+
+'''
+Fin Concenso
+----------------------------------------------------------
+'''
+
+'''
+Para Frontends:
+'''
+
+@app.route("/coordinacion/get-coordinator")
+def getCoordinator():
+	return jsonify(ok=True, description={'address_ar_primario':address_ar_primario})
 
 
 '''
@@ -650,19 +680,21 @@ FIN RUTAS Y HANDLERS
 
 
 if __name__ == "__main__":
-	global database, hiloTiempo
+	global database, hiloTiempo, address_ar_primario
 
 	for equipo in envGral:
 		if 'server' in equipo:
-			ip_server = envGral[equipo]['location']+':'+str(envGral[equipo]['puerto'])
+			ip_server = envGral[equipo]['location']#+":"+str(envGral[equipo]['puerto'])
 			prioridad = envGral[equipo]['priority']
+			if envGral[equipo]['type'] == "ar_primario":
+				address_ar_primario = envGral[equipo]['location']
 
 			prior_equipo = { 'direccion': ip_server, 'prioridad': prioridad }
 			prioridad_equipos.append( prior_equipo )
 
 	voBos = [None]*len(prioridad_equipos)
 	puertoServer = env['puerto']
-	database = env['database']
+	database = env['database']['name']
 	
 	for a in range(0, len(resultados)):
 		resultados[a] = {'idJugador': a, 'suma':'-'}
