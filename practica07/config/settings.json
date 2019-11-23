@@ -1,0 +1,65 @@
+{
+
+    "frontend_1":{
+        "send_to": "10.100.74.49"
+    },
+    "frontend_2":{
+        "send_to": "10.100.66.166"
+    },
+    "server_1":{
+        "numero" : 1,
+        "puerto" : 80,
+        "database" : {
+            "name": "resguardo_sumas_1",
+            "server": "10.100.77.215",
+            "user": "root",
+            "password": "12345"
+        },
+        "location" : "10.100.77.215",
+        "send_to" : "10.100.66.166",
+        "priority" : 1,
+        "type" : "ar_primario"
+    },
+    "server_2":{
+        "numero" : 2,
+        "puerto" : 80,
+        "database" : {
+            "name": "resguardo_sumas_2",
+            "server": "10.100.70.115",
+            "user": "root",
+            "password": "12345"
+        },
+        "location" : "10.100.66.166",
+        "send_to" : "10.100.74.49",
+        "priority" : 10,
+        "type" : "ar_secundario"
+    },
+    "server_3":{
+        "numero" : 3,
+        "puerto" : 80,
+        "database" : {
+            "name": "resguardo_sumas_3",
+            "server": "10.100.70.115",
+            "user": "root",
+            "password": "12345"
+        },
+        "location" : "10.100.77.217",
+        "send_to" : "localhost:80",
+        "priority" : 3,
+        "type" : "ar_secundario"
+    },
+    "server_clock_1":{
+        "numero" : 1,
+        "puerto" : 80,
+        "database" : {
+            "name": "resguardo_sumas_1",
+            "server": "10.100.70.115",
+            "user": "root",
+            "password": "12345"
+        },
+        "location" : "10.100.66.171",
+        "send_to" : "localhost:80",
+        "priority" : -1,
+        "type" : "reloj_primario"
+    }
+}
