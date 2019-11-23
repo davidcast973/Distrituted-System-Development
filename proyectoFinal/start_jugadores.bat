@@ -1,0 +1,1 @@
+start cmd /k python front_end.py 1 81
