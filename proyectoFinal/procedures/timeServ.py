@@ -86,7 +86,7 @@ def guardaDatosHoraEnBd(reloj, ipServer, offset, horaServer, latencia, bd_srvr_t
 
 
 def conectaBd(bd_srvr_tiempo):
-	server_bd = "10.100.76.126"
+	server_bd = "10.100.76.134"
 	if bd_srvr_tiempo is None:
 		return Bd("reloj_utc", hostname=server_bd, username='root', password='12345')
 	elif "C" in bd_srvr_tiempo:

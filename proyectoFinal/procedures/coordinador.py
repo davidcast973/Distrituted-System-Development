@@ -145,7 +145,7 @@ def guardaEnBd(ip_origen, numeroServer, frecuencias, relojObject, nombreEquipo, 
 
 	bd = connectToBd(dbName=dbName)
 
-	envio_anterior = bd.doQuery("SELECT id FROM envios ORDER BY id DESC LIMIT 1;", returnAsDict=False)[0]
+	envio_anterior = bd.doQuery("SELECT id FROM envios ORDER BY id DESC LIMIT 1;", returnAsDict=True)[0]
 	id_ant = envio_anterior['id']
 	id_next = id_ant+1
 
@@ -220,7 +220,7 @@ def connectToBd(dbName=None):
 	bd_name=dbName
 	#if dbName is None:
 	#	bd_name = "resguardo_sumas_1"
-	server_bd = "10.100.76.126"
+	server_bd = "10.100.76.134"
 
 	return Bd(	
 		hostname = server_bd,
