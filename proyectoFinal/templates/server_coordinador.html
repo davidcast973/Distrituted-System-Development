@@ -51,7 +51,7 @@
 
   </div>
 
-  <table class="w3-table-all w3-centered" style="width: 30%; margin-left:35%; margin-top: 25%;">
+  <table class="w3-table-all w3-centered" style="width: 30%; margin-left:35%; margin-top: 60%;">
 		<tr>
 			<th colspan="2">Frecuencias de números enviados</th>
 		</tr>
@@ -61,8 +61,8 @@
 		</tr>
 		{% for a in range(30) %}
 			<tr class="w3-hover-blue">
-				<td >{{a+1}}</td>
-				<td > {{(a+1)*2}} </td>
+				<td>{{a+1}}</td>
+				<td id="n_{{a+1}}"> - </td>
 			</tr>
 		{% endfor %}
   </table>

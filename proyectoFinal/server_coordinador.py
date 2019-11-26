@@ -450,7 +450,7 @@ def guardaResultadoOtroServidor():
 	numeroServer = datos['num_jugador_origin'] 
 	frecuencias = datos['frecuencias']
 	nombreEquipoOrigen = datos['nombre_equipo_origin']
-	resultados[ (numeroServidor)-1 ]['frecuencias'] = frecuencias
+	#resultados[ (numeroServidor)-1 ]['frecuencias'] = frecuencias
 	print("Arreglo de resultados!", resultados)
 	print("Arreglo de resultados!", resultados)
 	print("Arreglo de resultados!", resultados)

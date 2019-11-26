@@ -35,35 +35,43 @@ $(function(){
         });
     }, 500);
 
-    jugadores = [1];
-
-    jugadores.forEach(jugador => {
-        a = setInterval(function(){
-            var urlFormada = `/numeros/getResultOf/${jugador}`;
-            console.log("URL:"+urlFormada);
-            $.ajax({
-                type: "GET",
-                url: urlFormada,
-                //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
-                contentType:'application/json;charset=UTF-8',    
-            })
-            .done(function(data) {
-                var idFormado = `sumJ${jugador}`;
-                console.log("CampoAMostrar:"+idFormado);
-                if(data.ok == true){
-                    document.getElementById(idFormado).innerHTML = data.description.suma;
-                }else{
-                    console.log("Ocurrió un error:");
-                    console.log(data);
-                    console.log("---------------------------");
-                }    
-            })
-            .fail(function(data) {
+    play = setInterval(function(){
+        url_freqs = `/numeros/get-frequency-numbers/${1}`;
+        $.ajax({
+            type: "GET",
+            url: url_freqs,
+            //data: JSON.stringify({'auditoria':idAuditoria , 'preguntas':misCambios}),
+            contentType:'application/json;charset=UTF-8',    
+        })
+        .done(function(data) {
+            if(data.ok == true){
+                var datos = data.description; // data.description;
+                var index = 0;
+                for(index=1; index <= 30; index++){
+                    var idFormado = `n_${index}`;
+                    try{
+                        if( datos[index] != undefined){
+                            document.getElementById( idFormado ).innerHTML = datos[index];
+                        }
+                        else{
+                            document.getElementById( idFormado ).innerHTML = "-";
+                        }
+                    }catch(error){
+                        //console.log("Hubo un error");
+                        //console.log(error);
+                    }
+                }
+            }else{
+                console.log("Ocurrió un error:");
+                console.log(data);
+                console.log("---------------------------");
+            }    
+        })
+        .fail(function(data) {
             console.log( "error" );
             console.log(data);
-            });
-        }, 1000);
-    });
+        });
+    }, 1000);
     
     
     $("#edit1").click(function(){
