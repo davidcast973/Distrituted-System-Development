@@ -462,12 +462,12 @@ def guardaResultadoOtroServidor():
 	return jsonify( guardado )
 	
 
-@app.route("/numeros/getResultOf/<int:idJugador>", methods=['GET'])
+@app.route("/numeros/get-frequency-numbers/<int:idJugador>", methods=['GET'])
 def exponeSumaDeJugador(idJugador):
 	if idJugador in [0,1,2]:
-		return jsonify(ok=True, description=resultados[idJugador])
+		return jsonify(ok=True, description=resultados[idJugador]['frecuencias'])
 	else:
-		return jsonify(ok=False, description="Jugador Inexistente")
+		return jsonify(ok=False, description="Coordinador Inexistente")
 
 
 @app.route("/time/prueba-timing-time", methods=['POST'])
